@@ -44,6 +44,34 @@ box.style = {
 	pressed = {fillColor = {.3, .3, .3}},
 }
 box.onPress = function() print 'hi!' end
+table.insert(box.children, boxer.box {
+	x = function() return 150 + 300 * math.sin(love.timer.getTime()) end,
+	y = 150,
+	width = 50,
+	height = 50,
+	children = {
+		boxer.image {
+			image = love.graphics.newImage 'bean man.jpg',
+			x = -50,
+			y = -50,
+		}
+	},
+	clipChildren = true,
+})
+table.insert(box.children, boxer.box {
+	x = function() return 150 + 300 * math.sin(love.timer.getTime() * 1.5) end,
+	y = 75,
+	width = 50,
+	height = 50,
+	children = {
+		boxer.image {
+			image = love.graphics.newImage 'bean man.jpg',
+			x = function() return -50 + 50 * math.sin(love.timer.getTime()) end,
+			y = -50,
+		}
+	},
+	clipChildren = true,
+})
 box.clipChildren = true
 
 function love.update(dt)

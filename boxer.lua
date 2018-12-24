@@ -143,10 +143,8 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	end
 end
 
-function Box:draw()
-	local x, y, width, height = self:getRect()
-	love.graphics.push 'all'
-	love.graphics.translate(x, y)
+function Box:drawSelf()
+	local _, _, width, height = self:getRect()
 	local style = self:_getStyle()
 	if style then
 		if style.outlineColor then
@@ -159,14 +157,47 @@ function Box:draw()
 			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
 		end
 	end
+end
+
+function Box:pushStencil(stencilValue)
+	love.graphics.push 'all'
+	local _, _, width, height = self:getRect()
+	local style = self:_getStyle()
+	love.graphics.stencil(function()
+		local radiusX = style and style.radiusX
+		local radiusY = style and style.radiusY
+		love.graphics.rectangle('fill', 0, 0, width, height, radiusX, radiusY)
+	end, 'increment', 1, true)
+	love.graphics.setStencilTest('greater', stencilValue)
+end
+
+function Box:popStencil()
+	local _, _, width, height = self:getRect()
+	local style = self:_getStyle()
+	love.graphics.stencil(function()
+		local radiusX = style and style.radiusX
+		local radiusY = style and style.radiusY
+		love.graphics.rectangle('fill', 0, 0, width, height, radiusX, radiusY)
+	end, 'decrement', 1, true)
+	love.graphics.pop()
+end
+
+function Box:draw(stencilValue)
+	stencilValue = stencilValue or 0
+	love.graphics.push 'all'
+	love.graphics.translate(self:getRect())
+	self:drawSelf()
 	if self.clipChildren then
-		love.graphics.stencil(function()
-			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
-		end, 'replace', 1)
-		love.graphics.setStencilTest('greater', 0)
+		self:pushStencil(stencilValue)
+		for _, child in ipairs(self.children) do
+			child:draw(stencilValue + 1)
+		end
+		self:popStencil()
+	else
+		for _, child in ipairs(self.children) do
+			child:draw(stencilValue)
+		end
 	end
-	for _, child in ipairs(self.children) do child:draw() end
-	love.graphics.setStencilTest()
 	love.graphics.pop()
 end
 
@@ -346,7 +377,7 @@ end
 
 function Image:draw()
 	local style = self:_getStyle()
-	love.graphics.setColor(style.color or {1, 1, 1})
+	love.graphics.setColor(style and style.color or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
