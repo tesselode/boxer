@@ -147,14 +147,14 @@ function Box:drawSelf()
 	local _, _, width, height = self:getRect()
 	local style = self:_getStyle()
 	if style then
-		if style.outlineColor then
-			love.graphics.setColor(style.outlineColor)
-			love.graphics.setLineWidth(style.lineWidth or 1)
-			love.graphics.rectangle('line', 0, 0, width, height, style.radiusX, style.radiusY)
+		if get(style.outlineColor) then
+			love.graphics.setColor(get(style.outlineColor))
+			love.graphics.setLineWidth(get(style.lineWidth) or 1)
+			love.graphics.rectangle('line', 0, 0, width, height, get(style.radiusX), get(style.radiusY))
 		end
 		if style.fillColor then
-			love.graphics.setColor(style.fillColor)
-			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
+			love.graphics.setColor(get(style.fillColor))
+			love.graphics.rectangle('fill', 0, 0, width, height, get(style.radiusX), get(style.radiusY))
 		end
 	end
 end
@@ -328,7 +328,7 @@ end
 
 function Text:draw()
 	local style = self:_getStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
@@ -370,7 +370,7 @@ end
 
 function Paragraph:draw()
 	local style = self:_getStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
@@ -419,7 +419,7 @@ end
 
 function Image:draw()
 	local style = self:_getStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
