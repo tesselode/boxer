@@ -16,61 +16,42 @@ local box = boxer.box {
 		pressed = {fillColor = {.3, .3, .3}},
 	},
 	onPress = function() print 'hi!' end,
-}
-
-local text = boxer.text {
-	width = 100,
-	right = function() return box.center end,
-	middle = function() return box.middle end,
-	font = love.graphics.newFont(32),
-	text = 'Hello world!',
-	style = {
-		idle = {
-			color = {1, .8, .8},
-		},
-		hovered = {
-			color = {1, 1, 1},
-		},
-	},
-}
-
-local image = boxer.image {
-	image = love.graphics.newImage 'bean man.jpg',
-	scaleX = .5,
-	scaleY = .5,
-	right = function() return love.graphics.getWidth() end,
-	middle = function() return love.graphics.getHeight() / 2 + 100 * math.sin(love.timer.getTime()) end,
-	style = {
-		idle = {color = {1, .8, .8}},
-		hovered = {color = {1, 1, 1}},
-		pressed = {color = {.5, .5, .5}},
-	},
+	children = {
+		boxer.text {
+			x = 0,
+			y = 0,
+			font = love.graphics.newFont(32),
+			text = 'Hello world!',
+			style = {
+				idle = {
+					color = {1, .8, .8},
+				},
+				hovered = {
+					color = {1, 1, 1},
+				},
+			},
+		}
+	}
 }
 
 function love.update(dt)
+	box.x = box.x + 50 * dt
+	box.y = box.y + 25 * dt
 	box.height = box.height + 50 * dt
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)
 	box:mousemoved(x, y, dx, dy, istouch)
-	text:mousemoved(x, y, dx, dy, istouch)
-	image:mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
 	box:mousepressed(x, y, button, istouch, presses)
-	text:mousepressed(x, y, button, istouch, presses)
-	image:mousepressed(x, y, button, istouch, presses)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
 	box:mousereleased(x, y, button, istouch, presses)
-	text:mousereleased(x, y, button, istouch, presses)
-	image:mousereleased(x, y, button, istouch, presses)
 end
 
 function love.draw()
 	box:draw()
-	text:draw()
-	image:draw()
 end

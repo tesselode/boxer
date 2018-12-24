@@ -117,11 +117,17 @@ end
 
 function Box:mousemoved(x, y, dx, dy, istouch)
 	self.hovered = self:containsPoint(x, y)
+	for _, child in ipairs(self.children) do
+		child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
+	end
 end
 
 function Box:mousepressed(x, y, button, istouch, presses)
 	if not self.pressed and self.hovered then
 		self.pressed = button
+	end
+	for _, child in ipairs(self.children) do
+		child:mousepressed(x - self.x, y - self.y, button, istouch, presses)
 	end
 end
 
@@ -132,21 +138,29 @@ function Box:mousereleased(x, y, button, istouch, presses)
 			self.onPress()
 		end
 	end
+	for _, child in ipairs(self.children) do
+		child:mousereleased(x - self.x, y - self.y, button, istouch, presses)
+	end
 end
 
 function Box:draw()
-	local style = self:_getStyle()
-	if not style then return end
 	local x, y, width, height = self:getRect()
-	if style.outlineColor then
-		love.graphics.setColor(style.outlineColor)
-		love.graphics.setLineWidth(style.lineWidth or 1)
-		love.graphics.rectangle('line', x, y, width, height, style.radiusX, style.radiusY)
+	love.graphics.push 'all'
+	love.graphics.translate(x, y)
+	local style = self:_getStyle()
+	if style then
+		if style.outlineColor then
+			love.graphics.setColor(style.outlineColor)
+			love.graphics.setLineWidth(style.lineWidth or 1)
+			love.graphics.rectangle('line', 0, 0, width, height, style.radiusX, style.radiusY)
+		end
+		if style.fillColor then
+			love.graphics.setColor(style.fillColor)
+			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
+		end
 	end
-	if style.fillColor then
-		love.graphics.setColor(style.fillColor)
-		love.graphics.rectangle('fill', x, y, width, height, style.radiusX, style.radiusY)
-	end
+	for _, child in ipairs(self.children) do child:draw() end
+	love.graphics.pop()
 end
 
 function Box:__index(k)
@@ -174,11 +188,16 @@ function Box:__newindex(k, v)
 end
 
 function Box:_init(options, sizeIsOptional)
+	-- private variables
 	self._x, self._anchorX = nil, nil
 	self._y, self._anchorY = nil, nil
 	self._width, self._height = nil, nil
+
+	-- mouse state
 	self.hovered = false
 	self.pressed = false
+
+	-- options
 	assert(one(options.x, options.left, options.center, options.right))
 	assert(one(options.y, options.top, options.middle, options.bottom))
 	if not sizeIsOptional then
@@ -197,6 +216,7 @@ function Box:_init(options, sizeIsOptional)
 	if options.bottom then self.bottom = options.bottom end
 	self.onPress = options.onPress
 	self.style = options.style
+	self.children = options.children or {}
 end
 
 function boxer.box(options)
