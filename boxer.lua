@@ -328,7 +328,7 @@ end
 
 function Text:draw()
 	local style = self:_getStyle()
-	love.graphics.setColor(style.color or {1, 1, 1})
+	love.graphics.setColor(style and style.color or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
@@ -353,6 +353,48 @@ function boxer.text(options)
 	local text = setmetatable({}, Text)
 	text:_init(options)
 	return text
+end
+
+-- paragraph --
+
+local Paragraph = {}
+
+function Paragraph:getHeight()
+	local _, lines = self.font:getWrap(self.text, self.width)
+	return #lines * self.font:getHeight() * self.font:getLineHeight()
+end
+
+function Paragraph:setHeight()
+	error('Cannot set height of a paragraph directly', 2)
+end
+
+function Paragraph:draw()
+	local style = self:_getStyle()
+	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setFont(self.font)
+	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
+end
+
+function Paragraph:__index(k)
+	return Paragraph[k] or Box.__index(self, k)
+end
+
+Paragraph.__newindex = Box.__newindex
+
+function Paragraph:_init(options)
+	assert(options.text)
+	assert(options.font)
+	assert(options.width)
+	self.text = options.text
+	self.font = options.font
+	self.align = options.align
+	Box._init(self, options, true)
+end
+
+function boxer.paragraph(options)
+	local paragraph = setmetatable({}, Paragraph)
+	paragraph:_init(options)
+	return paragraph
 end
 
 --- image ---
