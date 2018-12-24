@@ -1,5 +1,7 @@
 local boxer = {}
 
+--- utilities ---
+
 -- returns whether exactly one of the arguments evaluates to true
 local function one(...)
 	local result = false
@@ -30,6 +32,8 @@ end
 local function get(value)
 	return type(value) == 'function' and value() or value
 end
+
+--- box ---
 
 local Box = {}
 
@@ -169,7 +173,7 @@ function Box:__newindex(k, v)
 	rawset(self, k, v)
 end
 
-function Box:_init(options)
+function Box:_init(options, sizeIsOptional)
 	self._x, self._anchorX = nil, nil
 	self._y, self._anchorY = nil, nil
 	self._width, self._height = nil, nil
@@ -177,10 +181,12 @@ function Box:_init(options)
 	self.pressed = false
 	assert(one(options.x, options.left, options.center, options.right))
 	assert(one(options.y, options.top, options.middle, options.bottom))
-	assert(options.width)
-	assert(options.height)
-	self.width = options.width
-	self.height = options.height
+	if not sizeIsOptional then
+		assert(options.width)
+		assert(options.height)
+	end
+	if options.width then self.width = options.width end
+	if options.height then self.height = options.height end
 	if options.x then self.x = options.x end
 	if options.left then self.left = options.left end
 	if options.center then self.center = options.center end
@@ -197,6 +203,55 @@ function boxer.box(options)
 	local box = setmetatable({}, Box)
 	box:_init(options)
 	return box
+end
+
+--- text ---
+
+local Text = {}
+
+function Text:getWidth()
+	return self.font:getWidth(self.text) * self.scaleX
+end
+
+function Text:getHeight()
+	return self.font:getHeight() * self.scaleY
+end
+
+function Text:setWidth(width)
+	self.scaleX = width / self.font:getWidth(self.text)
+end
+
+function Text:setHeight(height)
+	self.scaleY = height / self.font:getHeight()
+end
+
+function Text:draw()
+	local style = self:_getStyle()
+	love.graphics.setColor(style.color or {1, 1, 1})
+	love.graphics.setFont(self.font)
+	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
+end
+
+function Text:__index(k)
+	return Text[k] or Box.__index(self, k)
+end
+
+Text.__newindex = Box.__newindex
+
+function Text:_init(options)
+	assert(options.text)
+	assert(options.font)
+	self.text = options.text
+	self.font = options.font
+	self.scaleX = options.scaleX or 1
+	self.scaleY = options.scaleY or self.scaleX
+	Box._init(self, options, true)
+end
+
+function boxer.text(options)
+	local text = setmetatable({}, Text)
+	text:_init(options)
+	return text
 end
 
 return boxer
