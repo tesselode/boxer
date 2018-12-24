@@ -254,4 +254,50 @@ function boxer.text(options)
 	return text
 end
 
+--- image ---
+
+local Image = {}
+
+function Image:getWidth()
+	return self.image:getWidth() * self.scaleX
+end
+
+function Image:getHeight()
+	return self.image:getHeight() * self.scaleY
+end
+
+function Image:setWidth(width)
+	self.scaleX = width / self.image:getWidth()
+end
+
+function Image:setHeight(height)
+	self.scaleY = height / self.image:getHeight()
+end
+
+function Image:draw()
+	local style = self:_getStyle()
+	love.graphics.setColor(style.color or {1, 1, 1})
+	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
+end
+
+function Image:__index(k)
+	return Image[k] or Box.__index(self, k)
+end
+
+Image.__newindex = Box.__newindex
+
+function Image:_init(options)
+	assert(options.image)
+	self.image = options.image
+	self.scaleX = options.scaleX or 1
+	self.scaleY = options.scaleY or self.scaleX
+	Box._init(self, options, true)
+end
+
+function boxer.image(options)
+	local image = setmetatable({}, Image)
+	image:_init(options)
+	return image
+end
+
 return boxer

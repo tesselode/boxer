@@ -34,6 +34,19 @@ local text = boxer.text {
 	},
 }
 
+local image = boxer.image {
+	image = love.graphics.newImage 'bean man.jpg',
+	scaleX = .5,
+	scaleY = .5,
+	right = function() return love.graphics.getWidth() end,
+	middle = function() return love.graphics.getHeight() / 2 + 100 * math.sin(love.timer.getTime()) end,
+	style = {
+		idle = {color = {1, .8, .8}},
+		hovered = {color = {1, 1, 1}},
+		pressed = {color = {.5, .5, .5}},
+	},
+}
+
 function love.update(dt)
 	box.height = box.height + 50 * dt
 end
@@ -41,19 +54,23 @@ end
 function love.mousemoved(x, y, dx, dy, istouch)
 	box:mousemoved(x, y, dx, dy, istouch)
 	text:mousemoved(x, y, dx, dy, istouch)
+	image:mousemoved(x, y, dx, dy, istouch)
 end
 
 function love.mousepressed(x, y, button, istouch, presses)
 	box:mousepressed(x, y, button, istouch, presses)
 	text:mousepressed(x, y, button, istouch, presses)
+	image:mousepressed(x, y, button, istouch, presses)
 end
 
 function love.mousereleased(x, y, button, istouch, presses)
 	box:mousereleased(x, y, button, istouch, presses)
 	text:mousereleased(x, y, button, istouch, presses)
+	image:mousereleased(x, y, button, istouch, presses)
 end
 
 function love.draw()
 	box:draw()
 	text:draw()
+	image:draw()
 end
