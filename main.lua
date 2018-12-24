@@ -31,12 +31,12 @@ local box = boxer.wrap {
 			},
 		},
 	},
-	padding = 10,
+	padding = -10,
 }
 box.style = {
 	idle = {
 		lineWidth = 2,
-		radiusX = 4,
+		radiusX = 32,
 		outlineColor = {1, 1, 1},
 		fillColor = {.2, .2, .2},
 	},
@@ -44,11 +44,10 @@ box.style = {
 	pressed = {fillColor = {.3, .3, .3}},
 }
 box.onPress = function() print 'hi!' end
+box.clipChildren = true
 
 function love.update(dt)
-	box.x = box.x + 50 * dt
-	box.y = box.y + 25 * dt
-	box.height = box.height + 50 * dt
+	box.height = box.height + 5 * dt
 end
 
 function love.mousemoved(x, y, dx, dy, istouch)

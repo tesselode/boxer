@@ -159,7 +159,14 @@ function Box:draw()
 			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
 		end
 	end
+	if self.clipChildren then
+		love.graphics.stencil(function()
+			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
+		end, 'replace', 1)
+		love.graphics.setStencilTest('greater', 0)
+	end
 	for _, child in ipairs(self.children) do child:draw() end
+	love.graphics.setStencilTest()
 	love.graphics.pop()
 end
 
@@ -217,6 +224,7 @@ function Box:_init(options, sizeIsOptional)
 	self.onPress = options.onPress
 	self.style = options.style
 	self.children = options.children or {}
+	self.clipChildren = options.clipChildren
 end
 
 function boxer.box(options)
