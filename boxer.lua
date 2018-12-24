@@ -72,6 +72,27 @@ function Box:getRect()
 	return self:getX(), self:getY(), self:getWidth(), self:getHeight()
 end
 
+function Box:containsPoint(x, y)
+	return x >= self.left
+	   and x <= self.right
+	   and y >= self.top
+	   and y <= self.bottom
+end
+
+function Box:overlaps(a, b, c, d)
+	local x, y, width, height
+	if type(a) == 'table' then
+		assert(a.x and a.y and a.width and a.height)
+		x, y, width, height = a.x, a.y, a.width, a.height
+	else
+		x, y, width, height = a, b, c, d
+	end
+	return self.left < x + width
+	   and self.right > x
+	   and self.top < y + height
+	   and self.bottom > y
+end
+
 function Box:setX(x, anchorX)
 	anchorX = anchorX or 0
 	self._x, self._anchorX = x, anchorX
