@@ -225,6 +225,48 @@ function boxer.box(options)
 	return box
 end
 
+function boxer.wrap(options)
+	assert(options)
+	assert(options.children and #options.children > 0)
+	local padding = options.padding or 0
+	local left = options.children[1].left
+	local top = options.children[1].top
+	local right = options.children[1].right
+	local bottom = options.children[1].bottom
+	for i = 2, #options.children do
+		local child = options.children[i]
+		left = math.min(left, child.left)
+		top = math.min(top, child.top)
+		right = math.max(right, child.right)
+		bottom = math.max(bottom, child.bottom)
+	end
+	left = left - padding
+	top = top - padding
+	right = right + padding
+	bottom = bottom + padding
+	for _, child in ipairs(options.children) do
+		if type(child._x) == 'function' then
+			local oldX = child._x
+			child._x = function() return oldX() - left end
+		else
+			child._x = child._x - left
+		end
+		if type(child._y) == 'function' then
+			local oldY = child._y
+			child._y = function() return oldY() - top end
+		else
+			child._y = child._y - left
+		end
+	end
+	return boxer.box {
+		left = left,
+		top = top,
+		width = right - left,
+		height = bottom - top,
+		children = options.children,
+	}
+end
+
 --- text ---
 
 local Text = {}

@@ -1,25 +1,10 @@
 local boxer = require 'boxer'
 
-local box = boxer.box {
-	left = 250,
-	top = 50,
-	width = 50,
-	height = 50,
-	style = {
-		idle = {
-			lineWidth = 2,
-			radiusX = 4,
-			outlineColor = {1, 1, 1},
-			fillColor = {.2, .2, .2},
-		},
-		hovered = {fillColor = {.4, .4, .4}},
-		pressed = {fillColor = {.3, .3, .3}},
-	},
-	onPress = function() print 'hi!' end,
+local box = boxer.wrap {
 	children = {
 		boxer.text {
-			x = 0,
-			y = 0,
+			x = 100,
+			y = 100,
 			font = love.graphics.newFont(32),
 			text = 'Hello world!',
 			style = {
@@ -30,9 +15,35 @@ local box = boxer.box {
 					color = {1, 1, 1},
 				},
 			},
-		}
-	}
+		},
+		boxer.text {
+			x = 200,
+			y = function() return love.graphics.getHeight() / 2 end,
+			font = love.graphics.newFont(16),
+			text = 'Wow nice it works!',
+			style = {
+				idle = {
+					color = {1, .8, .8},
+				},
+				hovered = {
+					color = {1, 1, 1},
+				},
+			},
+		},
+	},
+	padding = 10,
 }
+box.style = {
+	idle = {
+		lineWidth = 2,
+		radiusX = 4,
+		outlineColor = {1, 1, 1},
+		fillColor = {.2, .2, .2},
+	},
+	hovered = {fillColor = {.4, .4, .4}},
+	pressed = {fillColor = {.3, .3, .3}},
+}
+box.onPress = function() print 'hi!' end
 
 function love.update(dt)
 	box.x = box.x + 50 * dt
