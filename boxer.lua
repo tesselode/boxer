@@ -14,34 +14,34 @@ local function one(...)
 	return result
 end
 
+-- merges tables together
+local function merge(...)
+	local t = {}
+	for i = 1, select('#', ...) do
+		local t2 = select(i, ...)
+		for k, v in pairs(t2) do
+			t[k] = v
+		end
+	end
+	return t
+end
+
+-- gets the value of a property that can be either a function or a raw value
 local function get(value)
 	return type(value) == 'function' and value() or value
 end
 
 local Box = {}
 
-function Box:__index(k)
-	if k == 'x' or k == 'left' then return self:getX() end
-	if k == 'center'           then return self:getX(.5) end
-	if k == 'right'            then return self:getX(1) end
-	if k == 'y' or k == 'top'  then return self:getY() end
-	if k == 'middle'           then return self:getY(.5) end
-	if k == 'bottom'           then return self:getY(1) end
-	if k == 'width'            then return self:getWidth() end
-	if k == 'height'           then return self:getHeight() end
-	return Box[k]
-end
-
-function Box:__newindex(k, v)
-	if k == 'x' or k == 'left' then self:setX(v) return end
-	if k == 'center'           then self:setX(v, .5) return end
-	if k == 'right'            then self:setX(v, 1) return end
-	if k == 'y' or k == 'top'  then self:setY(v) return end
-	if k == 'middle'           then self:setY(v, .5) return end
-	if k == 'bottom'           then self:setY(v, 1) return end
-	if k == 'width'            then self:setWidth(v) return end
-	if k == 'height'           then self:setHeight(v) return end
-	rawset(self, k, v)
+function Box:_getStyle()
+	if not (self.style and self.style.idle) then return nil end
+	if self.pressed and self.style.pressed then
+		return merge(self.style.idle, self.style.pressed)
+	end
+	if self.hovered and self.style.hovered then
+		return merge(self.style.idle, self.style.hovered)
+	end
+	return self.style.idle
 end
 
 function Box:getX(offset)
@@ -111,10 +111,70 @@ function Box:setHeight(height)
 	self._height = height
 end
 
+function Box:mousemoved(x, y, dx, dy, istouch)
+	self.hovered = self:containsPoint(x, y)
+end
+
+function Box:mousepressed(x, y, button, istouch, presses)
+	if not self.pressed and self.hovered then
+		self.pressed = button
+	end
+end
+
+function Box:mousereleased(x, y, button, istouch, presses)
+	if button == self.pressed then
+		self.pressed = false
+		if self.onPress and self.hovered then
+			self.onPress()
+		end
+	end
+end
+
+function Box:draw()
+	local style = self:_getStyle()
+	if not style then return end
+	local x, y, width, height = self:getRect()
+	if style.outlineColor then
+		love.graphics.setColor(style.outlineColor)
+		love.graphics.setLineWidth(style.lineWidth or 1)
+		love.graphics.rectangle('line', x, y, width, height, style.radiusX, style.radiusY)
+	end
+	if style.fillColor then
+		love.graphics.setColor(style.fillColor)
+		love.graphics.rectangle('fill', x, y, width, height, style.radiusX, style.radiusY)
+	end
+end
+
+function Box:__index(k)
+	if k == 'x' or k == 'left' then return self:getX() end
+	if k == 'center'           then return self:getX(.5) end
+	if k == 'right'            then return self:getX(1) end
+	if k == 'y' or k == 'top'  then return self:getY() end
+	if k == 'middle'           then return self:getY(.5) end
+	if k == 'bottom'           then return self:getY(1) end
+	if k == 'width'            then return self:getWidth() end
+	if k == 'height'           then return self:getHeight() end
+	return Box[k]
+end
+
+function Box:__newindex(k, v)
+	if k == 'x' or k == 'left' then self:setX(v) return end
+	if k == 'center'           then self:setX(v, .5) return end
+	if k == 'right'            then self:setX(v, 1) return end
+	if k == 'y' or k == 'top'  then self:setY(v) return end
+	if k == 'middle'           then self:setY(v, .5) return end
+	if k == 'bottom'           then self:setY(v, 1) return end
+	if k == 'width'            then self:setWidth(v) return end
+	if k == 'height'           then self:setHeight(v) return end
+	rawset(self, k, v)
+end
+
 function Box:_init(options)
 	self._x, self._anchorX = nil, nil
 	self._y, self._anchorY = nil, nil
 	self._width, self._height = nil, nil
+	self.hovered = false
+	self.pressed = false
 	assert(one(options.x, options.left, options.center, options.right))
 	assert(one(options.y, options.top, options.middle, options.bottom))
 	assert(options.width)
@@ -129,6 +189,8 @@ function Box:_init(options)
 	if options.top then self.top = options.top end
 	if options.middle then self.middle = options.middle end
 	if options.bottom then self.bottom = options.bottom end
+	self.onPress = options.onPress
+	self.style = options.style
 end
 
 function boxer.box(options)
