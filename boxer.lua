@@ -323,6 +323,22 @@ end
 
 local Text = {
 	properties = {
+		font = {
+			get = function(self) return get(self._font) end,
+			set = function(self, font) self._font = font end,
+		},
+		text = {
+			get = function(self) return get(self._text) end,
+			set = function(self, text) self._text = text end,
+		},
+		scaleX = {
+			get = function(self) return get(self._scaleX) end,
+			set = function(self, scaleX) self._scaleX = scaleX end,
+		},
+		scaleY = {
+			get = function(self) return get(self._scaleY) end,
+			set = function(self, scaleY) self._scaleY = scaleY end,
+		},
 		width = {
 			get = function(self)
 				return self.font:getWidth(self.text) * self.scaleX
@@ -391,6 +407,18 @@ end
 
 local Paragraph = {
 	properties = {
+		font = {
+			get = function(self) return get(self._font) end,
+			set = function(self, font) self._font = font end,
+		},
+		text = {
+			get = function(self) return get(self._text) end,
+			set = function(self, text) self._text = text end,
+		},
+		align = {
+			get = function(self) return get(self._align) end,
+			set = function(self, align) self._align = align end,
+		},
 		height = {
 			get = function(self)
 				local _, lines = self.font:getWrap(self.text, self.width)
@@ -452,6 +480,18 @@ end
 
 local Image = {
 	properties = {
+		image = {
+			get = function(self) return get(self._image) end,
+			set = function(self, image) self._image = image end,
+		},
+		scaleX = {
+			get = function(self) return get(self._scaleX) end,
+			set = function(self, scaleX) self._scaleX = scaleX end,
+		},
+		scaleY = {
+			get = function(self) return get(self._scaleY) end,
+			set = function(self, scaleY) self._scaleY = scaleY end,
+		},
 		width = {
 			get = function(self)
 				return self.image:getWidth() * self.scaleX
