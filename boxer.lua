@@ -30,7 +30,11 @@ end
 
 -- gets the value of a property that can be either a function or a raw value
 local function get(value)
-	return type(value) == 'function' and value() or value
+	if type(value) == 'function' then
+		return value()
+	else
+		return value
+	end
 end
 
 --- box ---
