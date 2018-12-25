@@ -28,7 +28,11 @@ local function merge(...)
 	return t
 end
 
--- gets the value of a property that can be either a function or a raw value
+--[[
+	many properties in boxer can be set to either a raw value (number, string, etc.)
+	or a function that returns a raw value. this function will call the function if
+	necessary and return the raw value.
+]]
 local function get(value)
 	if type(value) == 'function' then
 		return value()
@@ -37,7 +41,14 @@ local function get(value)
 	end
 end
 
---- box ---
+--[[
+	--- Boxes ---
+	The basic box class. Handles a bunch of cool stuff, like:
+	- getting/setting positions with metatable magic ✨
+	- mouse events
+	- getting styles
+	- drawing rectangles (wow!)
+]]
 
 local Box = {
 	properties = {
@@ -92,6 +103,8 @@ local Box = {
 	}
 }
 
+-- gets the style that should be used for drawing given the box's state
+-- (idle/pressed/released)
 function Box:_getCurrentStyle()
 	if not (self.style and self.style.idle) then return nil end
 	if self.pressed and self.style.pressed then
@@ -103,6 +116,8 @@ function Box:_getCurrentStyle()
 	return self.style.idle
 end
 
+-- gets a position along the x-axis of the box depending on the offset
+-- (0 = left, 0.5 = center, 1 = right, etc.)
 function Box:getX(offset)
 	offset = offset or 0
 	local width = self.width
@@ -111,6 +126,8 @@ function Box:getX(offset)
 	return x + width * offset
 end
 
+-- gets a position along the y-axis of the box depending on the offset
+-- (0 = top, 0.5 = middle, 1 = bottom, etc.)
 function Box:getY(offset)
 	offset = offset or 0
 	local height = self.height
@@ -130,6 +147,12 @@ function Box:containsPoint(x, y)
 	   and y <= self.bottom
 end
 
+--[[
+	returns whether the box overlaps with another box
+	can take either left, top, right, bottom arguments
+	or a single table with x, y, width, and height properties
+	(can be another boxer Box or just whatever table)
+]]
 function Box:overlaps(a, b, c, d)
 	local x, y, width, height
 	if type(a) == 'table' then
@@ -144,16 +167,31 @@ function Box:overlaps(a, b, c, d)
 	   and self.bottom > y
 end
 
+--[[
+	sets the position of a certain point along the x-axis of the box (defined by anchorX)
+	0 = left, 0.5 = center, 1 = right, etc.
+	x can be a number or a function that returns a number
+]]
 function Box:setX(x, anchorX)
 	anchorX = anchorX or 0
 	self._x, self._anchorX = x, anchorX
 end
 
+--[[
+	sets the position of a certain point along the y-axis of the box (defined by anchorY)
+	0 = top, 0.5 = middle, 1 = bottom, etc.
+	y can be a number or a function that returns a number
+]]
 function Box:setY(y, anchorY)
 	anchorY = anchorY or 0
 	self._y, self._anchorY = y, anchorY
 end
 
+--[[
+	tells the box about mouse movement. corresponds to love.mousemoved
+	mousemoved events will also be passed to child boxes, and child boxes will
+	block other child boxes behind them (unless they're transparent)
+]]
 function Box:mousemoved(x, y, dx, dy, istouch)
 	self.hovered = self:containsPoint(x, y)
 	for i = #self.children, 1, -1 do
@@ -175,10 +213,19 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 	end
 end
 
+--[[
+	tells a box that the mouse is no longer hovering it.
+	used when a box shouldn't be hovered, but the mouse is technically over it
+	(outside of a clipping region, blocked by another box, etc.)
+]]
 function Box:mouseoff()
 	self.hovered = false
 end
 
+--[[
+	tells a box that a mouse button was pressed. corresponds to love.mousepressed
+	also tells child boxes about mouse presses, but doesn't consider clipping/blocking (yet)
+]]
 function Box:mousepressed(x, y, button, istouch, presses)
 	if not self.pressed and self.hovered then
 		self.pressed = button
@@ -188,6 +235,10 @@ function Box:mousepressed(x, y, button, istouch, presses)
 	end
 end
 
+--[[
+	tells a box that a mouse button was released. corresponds to love.mousereleased
+	also tells child boxes about mouse releases, but doesn't consider clipping/blocking (yet)
+]]
 function Box:mousereleased(x, y, button, istouch, presses)
 	if button == self.pressed then
 		self.pressed = false
@@ -200,6 +251,7 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	end
 end
 
+-- draws the box's fill/outline
 function Box:drawSelf()
 	local _, _, width, height = self:getRect()
 	local style = self:_getCurrentStyle()
@@ -216,6 +268,7 @@ function Box:drawSelf()
 	end
 end
 
+-- "pushes" a stencil onto the "stack". used for nested stencils
 function Box:pushStencil(stencilValue)
 	love.graphics.push 'all'
 	local _, _, width, height = self:getRect()
@@ -228,6 +281,7 @@ function Box:pushStencil(stencilValue)
 	love.graphics.setStencilTest('greater', stencilValue)
 end
 
+-- "pops" a stencil from the "stack". used for nested stencils
 function Box:popStencil()
 	local _, _, width, height = self:getRect()
 	local style = self:_getCurrentStyle()
@@ -239,6 +293,7 @@ function Box:popStencil()
 	love.graphics.pop()
 end
 
+-- draws the box and its children
 function Box:draw(stencilValue)
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
@@ -308,6 +363,10 @@ function boxer.box(options)
 	return box
 end
 
+--[[
+	creates a box around a number of children and adjusts the children's
+	position to be relative to the box.
+]]
 function boxer.wrap(options)
 	assert(options)
 	assert(options.children and #options.children > 0)
@@ -350,7 +409,13 @@ function boxer.wrap(options)
 	}
 end
 
---- text ---
+--[[
+	--- Text ---
+	Draws text, as you might expect. The behavior differs from regular boxes
+	in that the width and height are products of the font, text string,
+	scaleX, and scaleY. Setting the width or height will change scaleX
+	and scaleY, respectively.
+]]
 
 local Text = {
 	properties = {
@@ -434,7 +499,12 @@ function boxer.text(options)
 	return text
 end
 
--- paragraph --
+--[[
+	--- Paragraphs ---
+	Similar to the Text class, but uses the width property to define
+	how text should wrap. Height is readonly and determined from
+	the number of lines the text uses.
+]]
 
 local Paragraph = {
 	properties = {
@@ -507,7 +577,12 @@ function boxer.paragraph(options)
 	return paragraph
 end
 
---- image ---
+--[[
+	--- Images ---
+	Draws an image. The image is stretched to fill the defined
+	width and height. Width and height can also be defined using
+	scaleX and scaleY.
+]]
 
 local Image = {
 	properties = {
