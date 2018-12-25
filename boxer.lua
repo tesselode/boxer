@@ -67,6 +67,31 @@ local function setProperty(self, property, propertyName, value)
 	end
 end
 
+-- gets the metamethods of a class, given the class table and an optional parent
+local function getMetamethods(class, parent)
+	local function __index(self, k)
+		if class.properties[k] then
+			return getProperty(self, class.properties[k], k)
+		elseif parent and parent.properties[k] then
+			return getProperty(self, parent.properties[k], k)
+		elseif class[k] then
+			return class[k]
+		elseif parent then
+			return parent[k]
+		end
+	end
+	local function __newindex(self, k, v)
+		if class.properties[k] then
+			setProperty(self, class.properties[k], k, v)
+		elseif parent and parent.properties[k] then
+			setProperty(self, parent.properties[k], k, v)
+		else
+			rawset(self, k, v)
+		end
+	end
+	return __index, __newindex
+end
+
 --[[
 	--- Boxes ---
 	The basic box class. Handles a bunch of cool stuff, like:
@@ -327,20 +352,7 @@ function Box:draw(stencilValue)
 	love.graphics.pop()
 end
 
-function Box:__index(k)
-	if Box.properties[k] then
-		return getProperty(self, Box.properties[k], k)
-	end
-	return Box[k]
-end
-
-function Box:__newindex(k, v)
-	if Box.properties[k] then
-		setProperty(self, Box.properties[k], k, v)
-	else
-		rawset(self, k, v)
-	end
-end
+Box.__index, Box.__newindex = getMetamethods(Box)
 
 function Box:_init(options, sizeIsOptional)
 	-- mouse state
@@ -467,27 +479,7 @@ function Text:draw()
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
-function Text:__index(k)
-	if Text.properties[k] then
-		return getProperty(self, Text.properties[k], k)
-	elseif Box.properties[k] then
-		return getProperty(self, Box.properties[k], k)
-	elseif Text[k] then
-		return Text[k]
-	else
-		return Box[k]
-	end
-end
-
-function Text:__newindex(k, v)
-	if Text.properties[k] then
-		setProperty(self, Text.properties[k], k, v)
-	elseif Box.properties[k] then
-		setProperty(self, Box.properties[k], k, v)
-	else
-		rawset(self, k, v)
-	end
-end
+Text.__index, Text.__newindex = getMetamethods(Text, Box)
 
 function Text:_init(options)
 	assert(options.text)
@@ -536,27 +528,7 @@ function Paragraph:draw()
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
 
-function Paragraph:__index(k)
-	if Paragraph.properties[k] then
-		return getProperty(self, Paragraph.properties[k], k)
-	elseif Box.properties[k] then
-		return getProperty(self, Box.properties[k], k)
-	elseif Paragraph[k] then
-		return Paragraph[k]
-	else
-		return Box[k]
-	end
-end
-
-function Paragraph:__newindex(k, v)
-	if Paragraph.properties[k] then
-		setProperty(self, Paragraph.properties[k], k, v)
-	elseif Box.properties[k] then
-		setProperty(self, Box.properties[k], k, v)
-	else
-		rawset(self, k, v)
-	end
-end
+Paragraph.__index, Paragraph.__newindex = getMetamethods(Paragraph, Box)
 
 function Paragraph:_init(options)
 	assert(options.text)
@@ -611,27 +583,7 @@ function Image:draw()
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
-function Image:__index(k)
-	if Image.properties[k] then
-		return getProperty(self, Image.properties[k], k)
-	elseif Box.properties[k] then
-		return getProperty(self, Box.properties[k], k)
-	elseif Image[k] then
-		return Image[k]
-	else
-		return Box[k]
-	end
-end
-
-function Image:__newindex(k, v)
-	if Image.properties[k] then
-		setProperty(self, Image.properties[k], k, v)
-	elseif Box.properties[k] then
-		setProperty(self, Box.properties[k], k, v)
-	else
-		rawset(self, k, v)
-	end
-end
+Image.__index, Image.__newindex = getMetamethods(Image, Box)
 
 function Image:_init(options)
 	assert(options.image)
