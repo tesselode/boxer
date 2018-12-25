@@ -42,6 +42,30 @@ local function get(value)
 end
 
 --[[
+	gets an instance property. looks for a property.get function. if that's not found,
+	defaults to getting self._propertyName.
+]]
+local function getProperty(self, property, propertyName)
+	if property.get then
+		return property.get(self)
+	else
+		return get(self['_' .. propertyName])
+	end
+end
+
+--[[
+	sets an instance property. looks for a property.set function. if that's not found,
+	defaults to setting self._propertyName.
+]]
+local function setProperty(self, property, propertyName, value)
+	if property.set then
+		property.set(self, value)
+	else
+		self['_' .. propertyName] = value
+	end
+end
+
+--[[
 	--- Boxes ---
 	The basic box class. Handles a bunch of cool stuff, like:
 	- getting/setting positions with metatable magic ✨
@@ -84,22 +108,10 @@ local Box = {
 			get = function(self) return self:getY(1) end,
 			set = function(self, value) self:setY(value, 1) end,
 		},
-		width = {
-			get = function(self) return get(self._width) end,
-			set = function(self, value) self._width = value end,
-		},
-		height = {
-			get = function(self) return get(self._height) end,
-			set = function(self, value) self._height = value end,
-		},
-		clipChildren = {
-			get = function(self) return get(self._clipChildren) end,
-			set = function(self, value) self._clipChildren = value end,
-		},
-		transparent = {
-			get = function(self) return get(self._transparent) end,
-			set = function(self, value) self._transparent = value end,
-		},
+		width = {},
+		height = {},
+		clipChildren = {},
+		transparent = {},
 	}
 }
 
@@ -314,15 +326,15 @@ function Box:draw(stencilValue)
 end
 
 function Box:__index(k)
-	if Box.properties[k] and Box.properties[k].get then
-		return Box.properties[k].get(self)
+	if Box.properties[k] then
+		return getProperty(self, Box.properties[k], k)
 	end
 	return Box[k]
 end
 
 function Box:__newindex(k, v)
 	if Box.properties[k] then
-		Box.properties[k].set(self, v)
+		setProperty(self, Box.properties[k], k, v)
 	else
 		rawset(self, k, v)
 	end
@@ -419,22 +431,6 @@ end
 
 local Text = {
 	properties = {
-		font = {
-			get = function(self) return get(self._font) end,
-			set = function(self, font) self._font = font end,
-		},
-		text = {
-			get = function(self) return get(self._text) end,
-			set = function(self, text) self._text = text end,
-		},
-		scaleX = {
-			get = function(self) return get(self._scaleX) end,
-			set = function(self, scaleX) self._scaleX = scaleX end,
-		},
-		scaleY = {
-			get = function(self) return get(self._scaleY) end,
-			set = function(self, scaleY) self._scaleY = scaleY end,
-		},
 		width = {
 			get = function(self)
 				return self.font:getWidth(self.text) * self.scaleX
@@ -450,7 +446,11 @@ local Text = {
 			set = function(self, height)
 				self.scaleY = height / self.font:getHeight()
 			end,
-		}
+		},
+		font = {},
+		text = {},
+		scaleX = {},
+		scaleY = {},
 	}
 }
 
@@ -463,9 +463,9 @@ end
 
 function Text:__index(k)
 	if Text.properties[k] then
-		return Text.properties[k].get(self)
+		return getProperty(self, Text.properties[k], k)
 	elseif Box.properties[k] then
-		return Box.properties[k].get(self)
+		return getProperty(self, Box.properties[k], k)
 	elseif Text[k] then
 		return Text[k]
 	else
@@ -475,9 +475,9 @@ end
 
 function Text:__newindex(k, v)
 	if Text.properties[k] then
-		Text.properties[k].set(self, v)
+		setProperty(self, Text.properties[k], k, v)
 	elseif Box.properties[k] then
-		Box.properties[k].set(self, v)
+		setProperty(self, Box.properties[k], k, v)
 	else
 		rawset(self, k, v)
 	end
@@ -508,18 +508,6 @@ end
 
 local Paragraph = {
 	properties = {
-		font = {
-			get = function(self) return get(self._font) end,
-			set = function(self, font) self._font = font end,
-		},
-		text = {
-			get = function(self) return get(self._text) end,
-			set = function(self, text) self._text = text end,
-		},
-		align = {
-			get = function(self) return get(self._align) end,
-			set = function(self, align) self._align = align end,
-		},
 		height = {
 			get = function(self)
 				local _, lines = self.font:getWrap(self.text, self.width)
@@ -528,7 +516,10 @@ local Paragraph = {
 			set = function(self, height)
 				error('Cannot set height of a paragraph directly', 2)
 			end,
-		}
+		},
+		font = {},
+		text = {},
+		align = {},
 	}
 }
 
@@ -541,9 +532,9 @@ end
 
 function Paragraph:__index(k)
 	if Paragraph.properties[k] then
-		return Paragraph.properties[k].get(self)
+		return getProperty(self, Paragraph.properties[k], k)
 	elseif Box.properties[k] then
-		return Box.properties[k].get(self)
+		return getProperty(self, Box.properties[k], k)
 	elseif Paragraph[k] then
 		return Paragraph[k]
 	else
@@ -553,9 +544,9 @@ end
 
 function Paragraph:__newindex(k, v)
 	if Paragraph.properties[k] then
-		Paragraph.properties[k].set(self, v)
+		setProperty(self, Paragraph.properties[k], k, v)
 	elseif Box.properties[k] then
-		Box.properties[k].set(self, v)
+		setProperty(self, Box.properties[k], k, v)
 	else
 		rawset(self, k, v)
 	end
@@ -586,18 +577,6 @@ end
 
 local Image = {
 	properties = {
-		image = {
-			get = function(self) return get(self._image) end,
-			set = function(self, image) self._image = image end,
-		},
-		scaleX = {
-			get = function(self) return get(self._scaleX) end,
-			set = function(self, scaleX) self._scaleX = scaleX end,
-		},
-		scaleY = {
-			get = function(self) return get(self._scaleY) end,
-			set = function(self, scaleY) self._scaleY = scaleY end,
-		},
 		width = {
 			get = function(self)
 				return self.image:getWidth() * self.scaleX
@@ -614,6 +593,9 @@ local Image = {
 				self.scaleY = height / self.image:getHeight()
 			end,
 		},
+		image = {},
+		scaleX = {},
+		scaleY = {},
 	}
 }
 
@@ -625,9 +607,9 @@ end
 
 function Image:__index(k)
 	if Image.properties[k] then
-		return Image.properties[k].get(self)
+		return getProperty(self, Image.properties[k], k)
 	elseif Box.properties[k] then
-		return Box.properties[k].get(self)
+		return getProperty(self, Box.properties[k], k)
 	elseif Image[k] then
 		return Image[k]
 	else
@@ -637,9 +619,9 @@ end
 
 function Image:__newindex(k, v)
 	if Image.properties[k] then
-		Image.properties[k].set(self, v)
+		setProperty(self, Image.properties[k], k, v)
 	elseif Box.properties[k] then
-		Box.properties[k].set(self, v)
+		setProperty(self, Box.properties[k], k, v)
 	else
 		rawset(self, k, v)
 	end
