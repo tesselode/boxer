@@ -81,6 +81,14 @@ local Box = {
 			get = function(self) return get(self._height) end,
 			set = function(self, value) self._height = value end,
 		},
+		clipChildren = {
+			get = function(self) return get(self._clipChildren) end,
+			set = function(self, value) self._clipChildren = value end,
+		},
+		transparent = {
+			get = function(self) return get(self._transparent) end,
+			set = function(self, value) self._transparent = value end,
+		},
 	}
 }
 
@@ -148,9 +156,27 @@ end
 
 function Box:mousemoved(x, y, dx, dy, istouch)
 	self.hovered = self:containsPoint(x, y)
-	for _, child in ipairs(self.children) do
-		child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
+	for i = #self.children, 1, -1 do
+		local child = self.children[i]
+		local mouseClipped = self.clipChildren and not self.hovered
+		if mouseClipped then
+			child:mouseoff()
+		else
+			child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
+			if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
+				for j = i - 1, 1, -1 do
+					local lowerChild = self.children[j]
+					lowerChild:mouseoff()
+				end
+				self.hovered = false
+				return
+			end
+		end
 	end
+end
+
+function Box:mouseoff()
+	self.hovered = false
 end
 
 function Box:mousepressed(x, y, button, istouch, presses)
@@ -273,6 +299,7 @@ function Box:_init(options, sizeIsOptional)
 	self.style = options.style
 	self.children = options.children or {}
 	self.clipChildren = options.clipChildren
+	self.transparent = options.transparent
 end
 
 function boxer.box(options)

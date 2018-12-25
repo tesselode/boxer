@@ -19,14 +19,49 @@ local box = boxer.box {
 		}
 	},
 	children = {
-		boxer.text {
+		boxer.box {
+			x = 50,
+			y = -25,
+			width = 100,
+			height = 50,
+			style = {
+				idle = {
+					fillColor = {.2, .2, .2},
+					outlineColor = {1, 1, 1},
+				},
+				hovered = {
+					fillColor = {.4, .4, .4},
+				},
+				pressed = {
+					fillColor = {.3, .3, .3},
+					outlineColor = {.4, .4, .4},
+				}
+			},
+			onPress = function() print 'hello' end,
+		},
+		boxer.box {
 			x = 25,
-			y = 25,
-			font = love.graphics.newFont(18),
-			text = 'Hello world!',
+			y = -25,
 			width = 50,
-		}
-	}
+			height = 50,
+			style = {
+				idle = {
+					fillColor = {.2, .2, .2},
+					outlineColor = {1, 1, 1},
+				},
+				hovered = {
+					fillColor = {.4, .4, .4},
+				},
+				pressed = {
+					fillColor = {.3, .3, .3},
+					outlineColor = {.4, .4, .4},
+				}
+			},
+			transparent = true,
+			onPress = function() print 'nice' end,
+		},
+	},
+	clipChildren = function() return love.keyboard.isDown('space') end,
 }
 
 function love.mousemoved(x, y, dx, dy, istouch)
