@@ -1,0 +1,16 @@
+Todo:
+- [ ] More event callbacks
+	- [ ] `onClick` - differs from `onPress` in that it fires as soon as the button is clicked, not just when it's released
+	- [ ] `onMove` - maybe useful?
+	- [ ] `onDrag`
+	- [ ] `onEnter`/`onLeave`
+- [ ] Make some properties readonly, like `pressed` and `hovered`
+- [ ] More thorough `options` validation
+- [ ] Maybe find a more compact way to define properties that can be set to either a function or a value, since this is a common pattern I'm repeating a lot
+- [ ] Animation support? Might be out of scope
+- [ ] More drawing objects, like circles and polygons
+	- Circles could potentially have their own clipping rules
+	- May not be worth the effort, as people can define their own draw functions, making drawing shapes fairly trivial
+- [ ] Code review
+	- [ ] Make sure I'm only using the `get` function when I need to
+		- `get` is used frequently to get the values of styles - this can probably be done in the `_getCurrentStyle` function
