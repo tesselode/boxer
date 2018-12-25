@@ -7,7 +7,7 @@ Todo:
 - [ ] Make some properties readonly, like `pressed` and `hovered`
 - [ ] More thorough `options` validation
 - [x] Maybe find a more compact way to define properties that can be set to either a function or a value, since this is a common pattern I'm repeating a lot
-- [ ] Reduce use of `get` function when dealing with styles
+- [x] Reduce use of `get` function when dealing with styles
 - [ ] Animation support? Might be out of scope
 - [ ] More drawing objects, like circles and polygons
 	- Circles could potentially have their own clipping rules

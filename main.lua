@@ -8,7 +8,9 @@ local box = boxer.box {
 	onPress = function() print 'hi!' end,
 	style = {
 		idle = {
-			fillColor = {.2, .2, .2},
+			fillColor = function()
+				return {.2, .2, .2, .5 + .5 * math.sin(love.timer.getTime())}
+			end,
 		},
 		hovered = {
 			fillColor = {.4, .4, .4},

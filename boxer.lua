@@ -21,8 +21,10 @@ local function merge(...)
 	local t = {}
 	for i = 1, select('#', ...) do
 		local t2 = select(i, ...)
-		for k, v in pairs(t2) do
-			t[k] = v
+		if type(t2) == 'table' then
+			for k, v in pairs(t2) do
+				t[k] = v
+			end
 		end
 	end
 	return t
@@ -119,13 +121,13 @@ local Box = {
 -- (idle/pressed/released)
 function Box:_getCurrentStyle()
 	if not (self.style and self.style.idle) then return nil end
-	if self.pressed and self.style.pressed then
-		return merge(self.style.idle, self.style.pressed)
-	end
-	if self.hovered and self.style.hovered then
-		return merge(self.style.idle, self.style.hovered)
-	end
-	return self.style.idle
+	local style = merge(
+		self.style.idle,
+		self.hovered and self.style.hovered,
+		self.pressed and self.style.pressed
+	)
+	for k, v in pairs(style) do style[k] = get(v) end
+	return style
 end
 
 -- gets a position along the x-axis of the box depending on the offset
@@ -268,14 +270,14 @@ function Box:drawSelf()
 	local _, _, width, height = self:getRect()
 	local style = self:_getCurrentStyle()
 	if style then
-		if get(style.outlineColor) then
-			love.graphics.setColor(get(style.outlineColor))
-			love.graphics.setLineWidth(get(style.lineWidth) or 1)
-			love.graphics.rectangle('line', 0, 0, width, height, get(style.radiusX), get(style.radiusY))
+		if style.outlineColor then
+			love.graphics.setColor(style.outlineColor)
+			love.graphics.setLineWidth(style.lineWidth or 1)
+			love.graphics.rectangle('line', 0, 0, width, height, style.radiusX, style.radiusY)
 		end
 		if style.fillColor then
-			love.graphics.setColor(get(style.fillColor))
-			love.graphics.rectangle('fill', 0, 0, width, height, get(style.radiusX), get(style.radiusY))
+			love.graphics.setColor(style.fillColor)
+			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
 		end
 	end
 end
@@ -456,7 +458,7 @@ local Text = {
 
 function Text:draw()
 	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
+	love.graphics.setColor(style and style.color or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
@@ -525,7 +527,7 @@ local Paragraph = {
 
 function Paragraph:draw()
 	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
+	love.graphics.setColor(style and style.color or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
@@ -601,7 +603,7 @@ local Image = {
 
 function Image:draw()
 	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
+	love.graphics.setColor(style and style.color or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
