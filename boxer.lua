@@ -35,9 +35,52 @@ end
 
 --- box ---
 
-local Box = {}
+local Box = {
+	properties = {
+		x = {
+			get = function(self) return self:getX(0) end,
+			set = function(self, value) self:setX(value, 0) end,
+		},
+		left = {
+			get = function(self) return self:getX(0) end,
+			set = function(self, value) self:setX(value, 0) end,
+		},
+		center = {
+			get = function(self) return self:getX(.5) end,
+			set = function(self, value) self:setX(value, .5) end,
+		},
+		right = {
+			get = function(self) return self:getX(1) end,
+			set = function(self, value) self:setX(value, 1) end,
+		},
+		y = {
+			get = function(self) return self:getY(0) end,
+			set = function(self, value) self:setY(value, 0) end,
+		},
+		top = {
+			get = function(self) return self:getY(0) end,
+			set = function(self, value) self:setY(value, 0) end,
+		},
+		middle = {
+			get = function(self) return self:getY(.5) end,
+			set = function(self, value) self:setY(value, .5) end,
+		},
+		bottom = {
+			get = function(self) return self:getY(1) end,
+			set = function(self, value) self:setY(value, 1) end,
+		},
+		width = {
+			get = function(self) return get(self._width) end,
+			set = function(self, value) self._width = value end,
+		},
+		height = {
+			get = function(self) return get(self._height) end,
+			set = function(self, value) self._height = value end,
+		},
+	}
+}
 
-function Box:_getStyle()
+function Box:_getCurrentStyle()
 	if not (self.style and self.style.idle) then return nil end
 	if self.pressed and self.style.pressed then
 		return merge(self.style.idle, self.style.pressed)
@@ -50,7 +93,7 @@ end
 
 function Box:getX(offset)
 	offset = offset or 0
-	local width = self:getWidth()
+	local width = self.width
 	local x = get(self._x)
 	x = x - width * self._anchorX
 	return x + width * offset
@@ -58,22 +101,14 @@ end
 
 function Box:getY(offset)
 	offset = offset or 0
-	local height = self:getHeight()
+	local height = self.height
 	local y = get(self._y)
 	y = y - height * self._anchorY
 	return y + height * offset
 end
 
-function Box:getWidth()
-	return get(self._width)
-end
-
-function Box:getHeight()
-	return get(self._height)
-end
-
 function Box:getRect()
-	return self:getX(), self:getY(), self:getWidth(), self:getHeight()
+	return self.x, self.y, self.width, self.height
 end
 
 function Box:containsPoint(x, y)
@@ -107,14 +142,6 @@ function Box:setY(y, anchorY)
 	self._y, self._anchorY = y, anchorY
 end
 
-function Box:setWidth(width)
-	self._width = width
-end
-
-function Box:setHeight(height)
-	self._height = height
-end
-
 function Box:mousemoved(x, y, dx, dy, istouch)
 	self.hovered = self:containsPoint(x, y)
 	for _, child in ipairs(self.children) do
@@ -145,7 +172,7 @@ end
 
 function Box:drawSelf()
 	local _, _, width, height = self:getRect()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	if style then
 		if get(style.outlineColor) then
 			love.graphics.setColor(get(style.outlineColor))
@@ -162,7 +189,7 @@ end
 function Box:pushStencil(stencilValue)
 	love.graphics.push 'all'
 	local _, _, width, height = self:getRect()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	love.graphics.stencil(function()
 		local radiusX = style and style.radiusX
 		local radiusY = style and style.radiusY
@@ -173,7 +200,7 @@ end
 
 function Box:popStencil()
 	local _, _, width, height = self:getRect()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	love.graphics.stencil(function()
 		local radiusX = style and style.radiusX
 		local radiusY = style and style.radiusY
@@ -202,35 +229,21 @@ function Box:draw(stencilValue)
 end
 
 function Box:__index(k)
-	if k == 'x' or k == 'left' then return self:getX() end
-	if k == 'center'           then return self:getX(.5) end
-	if k == 'right'            then return self:getX(1) end
-	if k == 'y' or k == 'top'  then return self:getY() end
-	if k == 'middle'           then return self:getY(.5) end
-	if k == 'bottom'           then return self:getY(1) end
-	if k == 'width'            then return self:getWidth() end
-	if k == 'height'           then return self:getHeight() end
+	if Box.properties[k] and Box.properties[k].get then
+		return Box.properties[k].get(self)
+	end
 	return Box[k]
 end
 
 function Box:__newindex(k, v)
-	if k == 'x' or k == 'left' then self:setX(v) return end
-	if k == 'center'           then self:setX(v, .5) return end
-	if k == 'right'            then self:setX(v, 1) return end
-	if k == 'y' or k == 'top'  then self:setY(v) return end
-	if k == 'middle'           then self:setY(v, .5) return end
-	if k == 'bottom'           then self:setY(v, 1) return end
-	if k == 'width'            then self:setWidth(v) return end
-	if k == 'height'           then self:setHeight(v) return end
-	rawset(self, k, v)
+	if Box.properties[k] then
+		Box.properties[k].set(self, v)
+	else
+		rawset(self, k, v)
+	end
 end
 
 function Box:_init(options, sizeIsOptional)
-	-- private variables
-	self._x, self._anchorX = nil, nil
-	self._y, self._anchorY = nil, nil
-	self._width, self._height = nil, nil
-
 	-- mouse state
 	self.hovered = false
 	self.pressed = false
@@ -308,36 +321,55 @@ end
 
 --- text ---
 
-local Text = {}
-
-function Text:getWidth()
-	return self.font:getWidth(self.text) * self.scaleX
-end
-
-function Text:getHeight()
-	return self.font:getHeight() * self.scaleY
-end
-
-function Text:setWidth(width)
-	self.scaleX = width / self.font:getWidth(self.text)
-end
-
-function Text:setHeight(height)
-	self.scaleY = height / self.font:getHeight()
-end
+local Text = {
+	properties = {
+		width = {
+			get = function(self)
+				return self.font:getWidth(self.text) * self.scaleX
+			end,
+			set = function(self, width)
+				self.scaleX = width / self.font:getWidth(self.text)
+			end,
+		},
+		height = {
+			get = function(self)
+				return self.font:getHeight() * self.scaleY
+			end,
+			set = function(self, height)
+				self.scaleY = height / self.font:getHeight()
+			end,
+		}
+	}
+}
 
 function Text:draw()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
 function Text:__index(k)
-	return Text[k] or Box.__index(self, k)
+	if Text.properties[k] then
+		return Text.properties[k].get(self)
+	elseif Box.properties[k] then
+		return Box.properties[k].get(self)
+	elseif Text[k] then
+		return Text[k]
+	else
+		return Box[k]
+	end
 end
 
-Text.__newindex = Box.__newindex
+function Text:__newindex(k, v)
+	if Text.properties[k] then
+		Text.properties[k].set(self, v)
+	elseif Box.properties[k] then
+		Box.properties[k].set(self, v)
+	else
+		rawset(self, k, v)
+	end
+end
 
 function Text:_init(options)
 	assert(options.text)
@@ -357,29 +389,48 @@ end
 
 -- paragraph --
 
-local Paragraph = {}
-
-function Paragraph:getHeight()
-	local _, lines = self.font:getWrap(self.text, self.width)
-	return #lines * self.font:getHeight() * self.font:getLineHeight()
-end
-
-function Paragraph:setHeight()
-	error('Cannot set height of a paragraph directly', 2)
-end
+local Paragraph = {
+	properties = {
+		height = {
+			get = function(self)
+				local _, lines = self.font:getWrap(self.text, self.width)
+				return #lines * self.font:getHeight() * self.font:getLineHeight()
+			end,
+			set = function(self, height)
+				error('Cannot set height of a paragraph directly', 2)
+			end,
+		}
+	}
+}
 
 function Paragraph:draw()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
 
 function Paragraph:__index(k)
-	return Paragraph[k] or Box.__index(self, k)
+	if Paragraph.properties[k] then
+		return Paragraph.properties[k].get(self)
+	elseif Box.properties[k] then
+		return Box.properties[k].get(self)
+	elseif Paragraph[k] then
+		return Paragraph[k]
+	else
+		return Box[k]
+	end
 end
 
-Paragraph.__newindex = Box.__newindex
+function Paragraph:__newindex(k, v)
+	if Paragraph.properties[k] then
+		Paragraph.properties[k].set(self, v)
+	elseif Box.properties[k] then
+		Box.properties[k].set(self, v)
+	else
+		rawset(self, k, v)
+	end
+end
 
 function Paragraph:_init(options)
 	assert(options.text)
@@ -399,35 +450,54 @@ end
 
 --- image ---
 
-local Image = {}
-
-function Image:getWidth()
-	return self.image:getWidth() * self.scaleX
-end
-
-function Image:getHeight()
-	return self.image:getHeight() * self.scaleY
-end
-
-function Image:setWidth(width)
-	self.scaleX = width / self.image:getWidth()
-end
-
-function Image:setHeight(height)
-	self.scaleY = height / self.image:getHeight()
-end
+local Image = {
+	properties = {
+		width = {
+			get = function(self)
+				return self.image:getWidth() * self.scaleX
+			end,
+			set = function(self, width)
+				self.scaleX = width / self.image:getWidth()
+			end,
+		},
+		height = {
+			get = function(self)
+				return self.image:getHeight() * self.scaleY
+			end,
+			set = function(self, height)
+				self.scaleY = height / self.image:getHeight()
+			end,
+		},
+	}
+}
 
 function Image:draw()
-	local style = self:_getStyle()
+	local style = self:_getCurrentStyle()
 	love.graphics.setColor(style and get(style.color) or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
 function Image:__index(k)
-	return Image[k] or Box.__index(self, k)
+	if Image.properties[k] then
+		return Image.properties[k].get(self)
+	elseif Box.properties[k] then
+		return Box.properties[k].get(self)
+	elseif Image[k] then
+		return Image[k]
+	else
+		return Box[k]
+	end
 end
 
-Image.__newindex = Box.__newindex
+function Image:__newindex(k, v)
+	if Image.properties[k] then
+		Image.properties[k].set(self, v)
+	elseif Box.properties[k] then
+		Box.properties[k].set(self, v)
+	else
+		rawset(self, k, v)
+	end
+end
 
 function Image:_init(options)
 	assert(options.image)

@@ -1,29 +1,46 @@
 local boxer = require 'boxer'
 
-local paragraph = boxer.paragraph {
+local box = boxer.box {
 	x = 50,
-	y = 50,
-	width = 400,
-	font = love.graphics.newFont(18),
-	text = 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer vestibulum urna lectus, ac imperdiet lorem ultrices sed. Proin cursus, sapien vel cursus finibus, tellus massa euismod quam, finibus lobortis sem ex nec quam.',
-	align = 'right',
+	bottom = function() return love.graphics.getHeight() end,
+	width = 100,
+	height = 200,
+	onPress = function() print 'hi!' end,
 	style = {
 		idle = {
-			color = function()
-				return {1, 1, 1, .75 + .25 * math.sin(love.timer.getTime() * 4)}
-			end
+			fillColor = {.2, .2, .2},
+		},
+		hovered = {
+			fillColor = {.4, .4, .4},
+		},
+		pressed = {
+			fillColor = {.3, .3, .3},
+			outlineColor = {.4, .4, .4},
+		}
+	},
+	children = {
+		boxer.text {
+			x = 25,
+			y = 25,
+			font = love.graphics.newFont(18),
+			text = 'Hello world!',
+			width = 50,
 		}
 	}
 }
 
-function love.update(dt)
-	paragraph.width = paragraph.width - 10 * dt
+function love.mousemoved(x, y, dx, dy, istouch)
+	box:mousemoved(x, y, dx, dy, istouch)
 end
 
-function love.keypressed(key)
-	paragraph.text = paragraph.text .. '\n'
+function love.mousepressed(x, y, button, istouch, presses)
+	box:mousepressed(x, y, button, istouch, presses)
+end
+
+function love.mousereleased(x, y, button, istouch, presses)
+	box:mousereleased(x, y, button, istouch, presses)
 end
 
 function love.draw()
-	paragraph:draw()
+	box:draw()
 end
