@@ -48,7 +48,7 @@ end
 	defaults to getting self._propertyName.
 ]]
 local function getProperty(self, property, propertyName)
-	if property.get then
+	if type(property) == 'table' and property.get then
 		return property.get(self)
 	else
 		return get(self['_' .. propertyName])
@@ -60,7 +60,7 @@ end
 	defaults to setting self._propertyName.
 ]]
 local function setProperty(self, property, propertyName, value)
-	if property.set then
+	if type(property) == 'table' and property.set then
 		property.set(self, value)
 	else
 		self['_' .. propertyName] = value
@@ -135,10 +135,10 @@ local Box = {
 			get = function(self) return self:getY(1) end,
 			set = function(self, value) self:setY(value, 1) end,
 		},
-		width = {},
-		height = {},
-		clipChildren = {},
-		transparent = {},
+		width = true,
+		height = true,
+		clipChildren = true,
+		transparent = true,
 	}
 }
 
@@ -465,10 +465,10 @@ local Text = {
 				self.scaleY = height / self.font:getHeight()
 			end,
 		},
-		font = {},
-		text = {},
-		scaleX = {},
-		scaleY = {},
+		font = true,
+		text = true,
+		scaleX = true,
+		scaleY = true,
 	}
 }
 
@@ -515,9 +515,9 @@ local Paragraph = {
 				error('Cannot set height of a paragraph directly', 2)
 			end,
 		},
-		font = {},
-		text = {},
-		align = {},
+		font = true,
+		text = true,
+		align = true,
 	}
 }
 
@@ -571,9 +571,9 @@ local Image = {
 				self.scaleY = height / self.image:getHeight()
 			end,
 		},
-		image = {},
-		scaleX = {},
-		scaleY = {},
+		image = true,
+		scaleX = true,
+		scaleY = true,
 	}
 }
 
