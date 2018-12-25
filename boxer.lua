@@ -385,6 +385,7 @@ function boxer.wrap(options)
 	assert(options)
 	assert(options.children and #options.children > 0)
 	local padding = options.padding or 0
+	-- get the bounds of the box
 	local left = options.children[1].left
 	local top = options.children[1].top
 	local right = options.children[1].right
@@ -396,10 +397,12 @@ function boxer.wrap(options)
 		right = math.max(right, child.right)
 		bottom = math.max(bottom, child.bottom)
 	end
+	-- add padding
 	left = left - padding
 	top = top - padding
 	right = right + padding
 	bottom = bottom + padding
+	-- adjust child positions
 	for _, child in ipairs(options.children) do
 		if type(child._x) == 'function' then
 			local oldX = child._x
@@ -414,6 +417,7 @@ function boxer.wrap(options)
 			child._y = child._y - left
 		end
 	end
+	-- return the box
 	return boxer.box {
 		left = left,
 		top = top,
