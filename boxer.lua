@@ -251,7 +251,14 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 			return
 		end
 	end
+	self._hoveredPrevious = self.hovered
 	self.hovered = self:containsPoint(x, y)
+	if self.hovered and not self._hoveredPrevious and self.onEnter then
+		self.onEnter()
+	end
+	if not self.hovered and self._hoveredPrevious and self.onLeave then
+		self.onLeave()
+	end
 end
 
 --[[
@@ -260,7 +267,11 @@ end
 	(outside of a clipping region, blocked by another box, etc.)
 ]]
 function Box:mouseoff()
+	self._hoveredPrevious = self.hovered
 	self.hovered = false
+	if not self.hovered and self._hoveredPrevious and self.onLeave then
+		self.onLeave()
+	end
 end
 
 --[[
@@ -302,7 +313,7 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	if self:containsPoint(x, y) and button == self.pressed then
 		self.pressed = false
 		if self.onPress and self.hovered then
-			self.onPress()
+			self.onPress(button)
 		end
 	end
 end
@@ -373,6 +384,7 @@ Box.__index, Box.__newindex = getMetamethods(Box)
 
 function Box:_init(options, sizeIsOptional)
 	-- mouse state
+	self._hoveredPrevious = false
 	self.hovered = false
 	self.pressed = false
 
@@ -395,6 +407,8 @@ function Box:_init(options, sizeIsOptional)
 	if options.bottom then self.bottom = options.bottom end
 	self.onPress = options.onPress
 	self.onClick = options.onClick
+	self.onEnter = options.onEnter
+	self.onLeave = options.onLeave
 	self.style = options.style
 	self.children = options.children or {}
 	self.clipChildren = options.clipChildren
