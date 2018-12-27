@@ -6,8 +6,9 @@ local box = boxer.box {
 	width = 100,
 	height = 200,
 	onPress = function() print 'hi!' end,
-	onEnter = function() print 'enter' end,
-	onLeave = function() print 'leave' end,
+	onMove = function(rx, ry, dx, dy)
+		print(rx, ry, dx, dy)
+	end,
 	style = {
 		idle = {
 			fillColor = function()

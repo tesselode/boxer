@@ -253,6 +253,9 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 	end
 	self._hoveredPrevious = self.hovered
 	self.hovered = self:containsPoint(x, y)
+	if self.onMove and self.hovered then
+		self.onMove(x - self.x, y - self.y, dx, dy)
+	end
 	if self.hovered and not self._hoveredPrevious and self.onEnter then
 		self.onEnter()
 	end
@@ -409,6 +412,7 @@ function Box:_init(options, sizeIsOptional)
 	self.onClick = options.onClick
 	self.onEnter = options.onEnter
 	self.onLeave = options.onLeave
+	self.onMove = options.onMove
 	self.style = options.style
 	self.children = options.children or {}
 	self.clipChildren = options.clipChildren
