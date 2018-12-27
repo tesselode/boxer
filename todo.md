@@ -1,6 +1,6 @@
 Todo:
 - [ ] More event callbacks
-	- [ ] `onClick` - differs from `onPress` in that it fires as soon as the button is clicked, not just when it's released
+	- [x] `onClick` - differs from `onPress` in that it fires as soon as the button is clicked, not just when it's released
 	- [ ] `onMove` - maybe useful?
 	- [ ] `onDrag`
 	- [ ] `onEnter`/`onLeave`

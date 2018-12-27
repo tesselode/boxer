@@ -6,6 +6,7 @@ local box = boxer.box {
 	width = 100,
 	height = 200,
 	onPress = function() print 'hi!' end,
+	onClick = function() print 'click' end,
 	style = {
 		idle = {
 			fillColor = function()

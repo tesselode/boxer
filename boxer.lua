@@ -232,24 +232,26 @@ end
 	block other child boxes behind them (unless they're transparent)
 ]]
 function Box:mousemoved(x, y, dx, dy, istouch)
-	self.hovered = self:containsPoint(x, y)
+	if self.clipChildren and not self:containsPoint(x, y) then
+		for _, child in ipairs(self.children) do
+			child:mouseoff()
+		end
+		self:mouseoff()
+		return
+	end
 	for i = #self.children, 1, -1 do
 		local child = self.children[i]
-		local mouseClipped = self.clipChildren and not self.hovered
-		if mouseClipped then
-			child:mouseoff()
-		else
-			child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
-			if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
-				for j = i - 1, 1, -1 do
-					local lowerChild = self.children[j]
-					lowerChild:mouseoff()
-				end
-				self.hovered = false
-				return
+		child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
+		if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
+			for j = i - 1, 1, -1 do
+				local lowerChild = self.children[j]
+				lowerChild:mouseoff()
 			end
+			self:mouseoff()
+			return
 		end
 	end
+	self.hovered = self:containsPoint(x, y)
 end
 
 --[[
@@ -263,30 +265,45 @@ end
 
 --[[
 	tells a box that a mouse button was pressed. corresponds to love.mousepressed
-	also tells child boxes about mouse presses, but doesn't consider clipping/blocking (yet)
+	also tells child boxes about mouse presses
 ]]
 function Box:mousepressed(x, y, button, istouch, presses)
-	if not self.pressed and self.hovered then
-		self.pressed = button
+	if self.clipChildren and not self:containsPoint(x, y) then
+		return
 	end
-	for _, child in ipairs(self.children) do
-		child:mousepressed(x - self.x, y - self.y, button, istouch, presses)
+	for i = #self.children, 1, -1 do
+		local child = self.children[i]
+		if child:containsPoint(x - self.x, y - self.y) then
+			child:mousepressed(x - self.x, y - self.y, button, istouch, presses)
+			if not child.transparent then return end
+		end
+	end
+	if not self.pressed and self:containsPoint(x, y) then
+		self.pressed = button
+		if self.onClick then self.onClick(button) end
 	end
 end
 
 --[[
 	tells a box that a mouse button was released. corresponds to love.mousereleased
-	also tells child boxes about mouse releases, but doesn't consider clipping/blocking (yet)
+	also tells child boxes about mouse releases
 ]]
 function Box:mousereleased(x, y, button, istouch, presses)
-	if button == self.pressed then
+	if self.clipChildren and not self:containsPoint(x, y) then
+		return
+	end
+	for i = #self.children, 1, -1 do
+		local child = self.children[i]
+		if child:containsPoint(x - self.x, y - self.y) then
+			child:mousereleased(x - self.x, y - self.y, button, istouch, presses)
+			if not child.transparent then return end
+		end
+	end
+	if self:containsPoint(x, y) and button == self.pressed then
 		self.pressed = false
 		if self.onPress and self.hovered then
 			self.onPress()
 		end
-	end
-	for _, child in ipairs(self.children) do
-		child:mousereleased(x - self.x, y - self.y, button, istouch, presses)
 	end
 end
 
@@ -377,6 +394,7 @@ function Box:_init(options, sizeIsOptional)
 	if options.middle then self.middle = options.middle end
 	if options.bottom then self.bottom = options.bottom end
 	self.onPress = options.onPress
+	self.onClick = options.onClick
 	self.style = options.style
 	self.children = options.children or {}
 	self.clipChildren = options.clipChildren
