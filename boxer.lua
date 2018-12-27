@@ -372,6 +372,14 @@ end
 
 Box.__index, Box.__newindex = getMetamethods(Box)
 
+local childrenMetatable = {
+	__index = function(self, k)
+		for _, child in ipairs(self) do
+			if child.name == k then return child end
+		end
+	end,
+}
+
 function Box:_init(options, sizeIsOptional)
 	-- mouse state
 	self._hoveredPrevious = false
@@ -403,8 +411,10 @@ function Box:_init(options, sizeIsOptional)
 	self.onDrag = options.onDrag
 	self.style = options.style
 	self.children = options.children or {}
+	setmetatable(self.children, childrenMetatable)
 	self.clipChildren = options.clipChildren
 	self.transparent = options.transparent
+	self.name = options.name
 end
 
 function boxer.box(options)

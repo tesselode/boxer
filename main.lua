@@ -23,6 +23,7 @@ local box = boxer.box {
 	},
 	children = {
 		boxer.box {
+			name = 'steve',
 			x = 50,
 			y = -25,
 			width = 100,
@@ -43,6 +44,7 @@ local box = boxer.box {
 			onPress = function() print 'hello' end,
 		},
 		boxer.box {
+			name = 'sara',
 			x = 25,
 			y = -25,
 			width = 50,
@@ -80,7 +82,7 @@ function love.mousereleased(x, y, button, istouch, presses)
 end
 
 function love.draw()
-	box:draw()
+	box.children.sara:draw()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print(math.floor(collectgarbage 'count') .. 'kb')
 end
