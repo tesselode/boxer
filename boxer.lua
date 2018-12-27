@@ -306,6 +306,8 @@ end
 	also tells child boxes about mouse releases
 ]]
 function Box:mousereleased(x, y, button, istouch, presses)
+	-- mouse releases should trigger regardless of whether the box is hovered or not,
+	-- so we don't bother with blocking/clipping checks here
 	if button == self.pressed then
 		self.pressed = false
 		if self.onPress and self.hovered then
