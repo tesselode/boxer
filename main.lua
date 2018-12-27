@@ -83,4 +83,6 @@ end
 
 function love.draw()
 	box:draw()
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.print(tostring(box.hovered))
 end

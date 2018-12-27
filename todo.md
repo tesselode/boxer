@@ -4,7 +4,7 @@ Todo:
 	- [x] `onMove` - maybe useful?
 	- [x] `onDrag`
 	- [x] `onEnter`/`onLeave`
-- [ ] Make some properties readonly, like `pressed` and `hovered`
+- [x] Make some properties readonly, like `pressed` and `hovered`
 - [ ] More thorough `options` validation
 - [ ] Allow accessing children by name
 - [x] Maybe find a more compact way to define properties that can be set to either a function or a value, since this is a common pattern I'm repeating a lot

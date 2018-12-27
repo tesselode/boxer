@@ -135,6 +135,18 @@ local Box = {
 			get = function(self) return self:getY(1) end,
 			set = function(self, value) self:setY(value, 1) end,
 		},
+		hovered = {
+			get = function(self) return self._hovered end,
+			set = function(self, value)
+				error('Cannot set hovered, as it is a readonly property.', 4)
+			end,
+		},
+		pressed = {
+			get = function(self) return self._pressed end,
+			set = function(self, value)
+				error('Cannot set pressed, as it is a readonly property.', 4)
+			end,
+		},
 		width = true,
 		height = true,
 		clipChildren = true,
@@ -148,8 +160,8 @@ function Box:_getCurrentStyle()
 	if not (self.style and self.style.idle) then return nil end
 	local style = merge(
 		self.style.idle,
-		self.hovered and self.style.hovered,
-		self.pressed and self.style.pressed
+		self._hovered and self.style.hovered,
+		self._pressed and self.style.pressed
 	)
 	for k, v in pairs(style) do style[k] = get(v) end
 	return style
@@ -251,18 +263,18 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 			return
 		end
 	end
-	self._hoveredPrevious = self.hovered
-	self.hovered = self:containsPoint(x, y)
-	if self.onMove and self.hovered then
+	self._hoveredPrevious = self._hovered
+	self._hovered = self:containsPoint(x, y)
+	if self.onMove and self._hovered then
 		self.onMove(x - self.x, y - self.y, dx, dy)
 	end
-	if self.onDrag and self.pressed then
-		self.onDrag(self.pressed, dx, dy)
+	if self.onDrag and self._pressed then
+		self.onDrag(self._pressed, dx, dy)
 	end
-	if self.hovered and not self._hoveredPrevious and self.onEnter then
+	if self._hovered and not self._hoveredPrevious and self.onEnter then
 		self.onEnter()
 	end
-	if not self.hovered and self._hoveredPrevious and self.onLeave then
+	if not self._hovered and self._hoveredPrevious and self.onLeave then
 		self.onLeave()
 	end
 end
@@ -273,9 +285,9 @@ end
 	(outside of a clipping region, blocked by another box, etc.)
 ]]
 function Box:mouseoff()
-	self._hoveredPrevious = self.hovered
-	self.hovered = false
-	if not self.hovered and self._hoveredPrevious and self.onLeave then
+	self._hoveredPrevious = self._hovered
+	self._hovered = false
+	if not self._hovered and self._hoveredPrevious and self.onLeave then
 		self.onLeave()
 	end
 end
@@ -295,8 +307,8 @@ function Box:mousepressed(x, y, button, istouch, presses)
 			if not child.transparent then return end
 		end
 	end
-	if not self.pressed and self:containsPoint(x, y) then
-		self.pressed = button
+	if not self._pressed and self:containsPoint(x, y) then
+		self._pressed = button
 		if self.onClick then self.onClick(button) end
 	end
 end
@@ -308,9 +320,9 @@ end
 function Box:mousereleased(x, y, button, istouch, presses)
 	-- mouse releases should trigger regardless of whether the box is hovered or not,
 	-- so we don't bother with blocking/clipping checks here
-	if button == self.pressed then
-		self.pressed = false
-		if self.onPress and self.hovered then
+	if button == self._pressed then
+		self._pressed = false
+		if self.onPress and self._hovered then
 			self.onPress(button)
 		end
 	end
@@ -386,8 +398,8 @@ Box.__index, Box.__newindex = getMetamethods(Box)
 function Box:_init(options, sizeIsOptional)
 	-- mouse state
 	self._hoveredPrevious = false
-	self.hovered = false
-	self.pressed = false
+	self._hovered = false
+	self._pressed = false
 
 	-- options
 	assert(one(options.x, options.left, options.center, options.right))
