@@ -11,9 +11,7 @@ local box = boxer.box {
 	end,
 	style = {
 		idle = {
-			fillColor = function()
-				return {.2, .2, .2, .5 + .5 * math.sin(love.timer.getTime())}
-			end,
+			fillColor = {.2, .2, .2},
 		},
 		hovered = {
 			fillColor = {.4, .4, .4},
@@ -51,14 +49,14 @@ local box = boxer.box {
 			height = 50,
 			style = {
 				idle = {
-					fillColor = {.2, .2, .2},
+					fillColor = {.2, .2, .2, .5},
 					outlineColor = {1, 1, 1},
 				},
 				hovered = {
-					fillColor = {.4, .4, .4},
+					fillColor = {.4, .4, .4, .5},
 				},
 				pressed = {
-					fillColor = {.3, .3, .3},
+					fillColor = {.3, .3, .3, .5},
 					outlineColor = {.4, .4, .4},
 				}
 			},
@@ -84,5 +82,5 @@ end
 function love.draw()
 	box:draw()
 	love.graphics.setColor(1, 1, 1)
-	love.graphics.print(tostring(box.hovered))
+	love.graphics.print(math.floor(collectgarbage 'count') .. 'kb')
 end

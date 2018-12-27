@@ -16,20 +16,6 @@ local function one(...)
 	return result
 end
 
--- merges tables together
-local function merge(...)
-	local t = {}
-	for i = 1, select('#', ...) do
-		local t2 = select(i, ...)
-		if type(t2) == 'table' then
-			for k, v in pairs(t2) do
-				t[k] = v
-			end
-		end
-	end
-	return t
-end
-
 --[[
 	many properties in boxer can be set to either a raw value (number, string, etc.)
 	or a function that returns a raw value. this function will call the function if
@@ -154,17 +140,13 @@ local Box = {
 	}
 }
 
--- gets the style that should be used for drawing given the box's state
+-- gets a style property given the box's state
 -- (idle/pressed/released)
-function Box:_getCurrentStyle()
+function Box:_getCurrentStyle(property)
 	if not (self.style and self.style.idle) then return nil end
-	local style = merge(
-		self.style.idle,
-		self._hovered and self.style.hovered,
-		self._pressed and self.style.pressed
-	)
-	for k, v in pairs(style) do style[k] = get(v) end
-	return style
+	return self._pressed and self.style.pressed and get(self.style.pressed[property])
+		or self._hovered and self.style.hovered and get(self.style.hovered[property])
+		or get(self.style.idle[property])
 end
 
 -- gets a position along the x-axis of the box depending on the offset
@@ -334,17 +316,16 @@ end
 -- draws the box's fill/outline
 function Box:drawSelf()
 	local _, _, width, height = self:getRect()
-	local style = self:_getCurrentStyle()
-	if style then
-		if style.outlineColor then
-			love.graphics.setColor(style.outlineColor)
-			love.graphics.setLineWidth(style.lineWidth or 1)
-			love.graphics.rectangle('line', 0, 0, width, height, style.radiusX, style.radiusY)
-		end
-		if style.fillColor then
-			love.graphics.setColor(style.fillColor)
-			love.graphics.rectangle('fill', 0, 0, width, height, style.radiusX, style.radiusY)
-		end
+	if self:_getCurrentStyle 'outlineColor' then
+		love.graphics.setColor(self:_getCurrentStyle 'outlineColor')
+		love.graphics.setLineWidth(self:_getCurrentStyle 'lineWidth' or 1)
+		love.graphics.rectangle('line', 0, 0, width, height,
+			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
+	end
+	if self:_getCurrentStyle 'fillColor' then
+		love.graphics.setColor(self:_getCurrentStyle 'fillColor')
+		love.graphics.rectangle('fill', 0, 0, width, height,
+			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
 	end
 end
 
@@ -352,11 +333,9 @@ end
 function Box:pushStencil(stencilValue)
 	love.graphics.push 'all'
 	local _, _, width, height = self:getRect()
-	local style = self:_getCurrentStyle()
 	love.graphics.stencil(function()
-		local radiusX = style and style.radiusX
-		local radiusY = style and style.radiusY
-		love.graphics.rectangle('fill', 0, 0, width, height, radiusX, radiusY)
+		love.graphics.rectangle('fill', 0, 0, width, height,
+			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
 	end, 'increment', 1, true)
 	love.graphics.setStencilTest('greater', stencilValue)
 end
@@ -364,11 +343,9 @@ end
 -- "pops" a stencil from the "stack". used for nested stencils
 function Box:popStencil()
 	local _, _, width, height = self:getRect()
-	local style = self:_getCurrentStyle()
 	love.graphics.stencil(function()
-		local radiusX = style and style.radiusX
-		local radiusY = style and style.radiusY
-		love.graphics.rectangle('fill', 0, 0, width, height, radiusX, radiusY)
+		love.graphics.rectangle('fill', 0, 0, width, height,
+			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
 	end, 'decrement', 1, true)
 	love.graphics.pop()
 end
@@ -520,8 +497,7 @@ local Text = {
 }
 
 function Text:draw()
-	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
@@ -569,8 +545,7 @@ local Paragraph = {
 }
 
 function Paragraph:draw()
-	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
@@ -625,8 +600,7 @@ local Image = {
 }
 
 function Image:draw()
-	local style = self:_getCurrentStyle()
-	love.graphics.setColor(style and style.color or {1, 1, 1})
+	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
