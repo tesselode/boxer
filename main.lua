@@ -6,8 +6,8 @@ local box = boxer.box {
 	width = 100,
 	height = 200,
 	onPress = function() print 'hi!' end,
-	onMove = function(rx, ry, dx, dy)
-		print(rx, ry, dx, dy)
+	onDrag = function(button, dx, dy)
+		print(button, dx, dy)
 	end,
 	style = {
 		idle = {

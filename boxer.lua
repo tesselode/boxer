@@ -256,6 +256,9 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 	if self.onMove and self.hovered then
 		self.onMove(x - self.x, y - self.y, dx, dy)
 	end
+	if self.onDrag and self.pressed then
+		self.onDrag(self.pressed, dx, dy)
+	end
 	if self.hovered and not self._hoveredPrevious and self.onEnter then
 		self.onEnter()
 	end
@@ -303,21 +306,14 @@ end
 	also tells child boxes about mouse releases
 ]]
 function Box:mousereleased(x, y, button, istouch, presses)
-	if self.clipChildren and not self:containsPoint(x, y) then
-		return
-	end
-	for i = #self.children, 1, -1 do
-		local child = self.children[i]
-		if child:containsPoint(x - self.x, y - self.y) then
-			child:mousereleased(x - self.x, y - self.y, button, istouch, presses)
-			if not child.transparent then return end
-		end
-	end
-	if self:containsPoint(x, y) and button == self.pressed then
+	if button == self.pressed then
 		self.pressed = false
 		if self.onPress and self.hovered then
 			self.onPress(button)
 		end
+	end
+	for _, child in ipairs(self.children) do
+		child:mousereleased(x, y, button, istouch, presses)
 	end
 end
 
@@ -413,6 +409,7 @@ function Box:_init(options, sizeIsOptional)
 	self.onEnter = options.onEnter
 	self.onLeave = options.onLeave
 	self.onMove = options.onMove
+	self.onDrag = options.onDrag
 	self.style = options.style
 	self.children = options.children or {}
 	self.clipChildren = options.clipChildren

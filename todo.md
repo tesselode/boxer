@@ -1,8 +1,8 @@
 Todo:
-- [ ] More event callbacks
+- [x] More event callbacks
 	- [x] `onClick` - differs from `onPress` in that it fires as soon as the button is clicked, not just when it's released
 	- [x] `onMove` - maybe useful?
-	- [ ] `onDrag`
+	- [x] `onDrag`
 	- [x] `onEnter`/`onLeave`
 - [ ] Make some properties readonly, like `pressed` and `hovered`
 - [ ] More thorough `options` validation
