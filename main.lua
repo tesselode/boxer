@@ -82,7 +82,7 @@ function love.mousereleased(x, y, button, istouch, presses)
 end
 
 function love.draw()
-	box.children.sara:draw()
+	box:draw()
 	love.graphics.setColor(1, 1, 1)
 	love.graphics.print(math.floor(collectgarbage 'count') .. 'kb')
 end

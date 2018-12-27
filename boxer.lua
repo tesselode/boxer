@@ -226,6 +226,7 @@ end
 	block other child boxes behind them (unless they're transparent)
 ]]
 function Box:mousemoved(x, y, dx, dy, istouch)
+	if self.disabled then return end
 	if self.clipChildren and not self:containsPoint(x, y) then
 		for _, child in ipairs(self.children) do
 			child:mouseoff()
@@ -267,6 +268,7 @@ end
 	(outside of a clipping region, blocked by another box, etc.)
 ]]
 function Box:mouseoff()
+	if self.disabled then return end
 	self._hoveredPrevious = self._hovered
 	self._hovered = false
 	if not self._hovered and self._hoveredPrevious and self.onLeave then
@@ -279,6 +281,7 @@ end
 	also tells child boxes about mouse presses
 ]]
 function Box:mousepressed(x, y, button, istouch, presses)
+	if self.disabled then return end
 	if self.clipChildren and not self:containsPoint(x, y) then
 		return
 	end
@@ -302,6 +305,7 @@ end
 function Box:mousereleased(x, y, button, istouch, presses)
 	-- mouse releases should trigger regardless of whether the box is hovered or not,
 	-- so we don't bother with blocking/clipping checks here
+	if self.disabled then return end
 	if button == self._pressed then
 		self._pressed = false
 		if self.onPress and self._hovered then
@@ -352,6 +356,7 @@ end
 
 -- draws the box and its children
 function Box:draw(stencilValue)
+	if self.hidden then return end
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
 	love.graphics.translate(self:getRect())
@@ -415,6 +420,8 @@ function Box:_init(options, sizeIsOptional)
 	self.clipChildren = options.clipChildren
 	self.transparent = options.transparent
 	self.name = options.name
+	self.hidden = options.hidden
+	self.disabled = options.disabled
 end
 
 function boxer.box(options)
@@ -507,6 +514,7 @@ local Text = {
 }
 
 function Text:draw()
+	if self.hidden then return end
 	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
@@ -555,6 +563,7 @@ local Paragraph = {
 }
 
 function Paragraph:draw()
+	if self.hidden then return end
 	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
@@ -610,6 +619,7 @@ local Image = {
 }
 
 function Image:draw()
+	if self.hidden then return end
 	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
