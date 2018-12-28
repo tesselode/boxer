@@ -17,73 +17,7 @@ Usage
 
 ### Creating boxes
 
-Boxes are the basic object created by Boxer. They're useful for drawing rectangles, positioning items, handling mouse events, and grouping items to gether.
-
-To create a box, use `boxer.new`:
-
-```lua
-local box = boxer.new(options)
-```
-
-`options` is a table of properties that will be used to initialize the box. There are a few required properties:
-- `x`/`left`/`center`/`right` (`number` | `function() -> number`) - sets the horizontal position of the box. You must define exactly one of these properties.
-- `y`/`top`/`middle`/`bottom` (`number` | `function() -> number`) - sets the vertical position of the box. You must define exactly one of these properties.
-- `width` (`number` | `function() -> number`) - the width of the box.
-- `height` (`number` | `function() -> number`) - the height of the box.
-
-Each of these properties can be either a number or a function that returns a number.
-
-There are also a number of optional properties:
-- `children` (`table`) - a list of child Boxer objects that the box should contain
-- `clipChildren` (`boolean` | `function() -> boolean`) - whether portions of children outside of the box should be hidden and unclickable
-- `transparent` (`boolean` | `function() -> boolean`) - whether the box should allow mouse events to pass through to boxes on a lower layer (only applies if the box is a child of another box)
-- `name` (`string`) - the name of the box. Can be used to access children via name if the box is a child of another box.
-- `hidden` (`boolean`) - whether the box (and its children) should be invisible.
-- `disabled` (`boolean`) - whether the box (and its children) should ignore mouse events.
-- `onPress` (`function(button)`) - a function to call whenever the box is pressed. The number of the mouse button is passed as the first argument.
-- `onClick` (`function(button)`) - a function to call as soon as the box is clicked. The number of the mouse button is passed as the first argument. This is different from `onPress`, which waits for the mouse to be released before it fires. If you want standard button clicking behavior, you probably want `onPress`.
-- `onEnter` (`function()`) - a function to call when the mouse enters the bounds of the box.
-- `onLeave` (`function()`) - a function to call when the mouse leaves the bounds of the box.
-- `onMove` (`function(relX, relY, dx, dy)`) - a function to call when the mouse is moved over the box. The functions is called with four arguments: the x position of the mouse relative to the top-left corner of the box, the y position of the mouse relative to the top-left corner of the box, the horizontal distance the mouse moved, and the vertical distance the mouse moved.
-- `onDrag` (`function(button, dx, dy)`) - a function to call when the box is dragged. The function is called with three arguments: the number of the mouse button used, the horizontal distance the mouse moved, and the vertical distance the mouse moved.
-
-All of these properties can also be set on the box directly after it is created.
-
 ### Positioning boxes
-
-Once you've created a box, there's a number of ways you can read and change its size and position. The easiest way is using the box's properties:
-- `x`/`left` - the x position of the left side of the box
-- `center` - the x position of the horizontal center of the box
-- `right` - the x position of the right side of the box
-- `y`/`top` - the y position of the top of the box
-- `middle` - the y position of the vertical center of the box
-- `bottom` - the y position of the bottom of the box
-- `width` - the width of the box
-- `height` - the height of the box
-
-For example, you could shift one box horizontally so its left edge is lined up with another box's right edge like this:
-
-```lua
-box2.left = box1.right
-```
-
-You can set any of these properties to either a number or a function that returns a number. If set to a function, the property will be automatically updated to whatever value the function returns. For example, this code will keep the right side of a box aligned to the right side of the screen, even if the window is resized:
-
-```lua
-box.right = function()
-	return love.graphics.getWidth()
-end
-```
-
-When setting a position, the part of the box that was set is remembered. So after running the above code, if you changed the `width` of the box, it would grow to the left, leaving the right side in its correct position.
-
-If you need more control over the position of a box, you can use `getX`/`getY` to get an arbitrary position or `setX`/`setY` to set an arbitrary position. The `get` functions take one argument - the offset. An offset of `0` will get the left/top of the box, an offset of `1` will get the right/bottom of the box, and `1/3` will get the point one third of the way from one side to the other. Similarly, the `set` functions take two arguments - one for the position, and one for the anchor.
-
-For example, this code would set the bottom of one box to be 40% of the way down the vertical axis of another box:
-
-```lua
-box2:setY(box1:getY(.4), 1)
-```
 
 ### Mouse events
 
@@ -94,6 +28,81 @@ box2:setY(box1:getY(.4), 1)
 ### Images
 
 ### Text
+
+API
+---
+
+### Box
+
+#### Constructors
+
+```lua
+local box = boxer.box {
+	x/left/center/right: number,
+	y/top/middle/bottom: number,
+	width: number,
+	height: number,
+	...
+}
+```
+Creates a new box. Takes an options table to set the properties for the box. Exactly one horizontal position property and one vertical position property must be defined, as well as `width` and `height`. Any other box properties can also be defined to set them immediately on the new box.
+
+```lua
+local box = boxer.wrap {children: table, padding: number = 0}
+```
+Creates a box that contains the specified children and adjusts the children's position to be relative to the new box. Optionally surrounds the children with the specified amount of padding.
+
+#### Functions
+
+```lua
+local x = box:getX(offset: number = 0)
+```
+Gets the x coordinate of an arbitrary point along the x-axis of the box. An offset of `0` gets the left side, `0.5` gets the center, and `1.0` gets the right side.
+
+```lua
+local y = box:getY(offset: number = 0)
+```
+Gets the y coordinate of an arbitrary point along the y-axis of the box. An offset of `0` gets the left side, `0.5` gets the center, and `1.0` gets the right side.
+
+```lua
+local x, y, width, height = box:getRect()
+```
+Gets the position and size of the box. Useful for plugging into `love.graphics` functions, such as `love.graphics.rectangle`.
+
+```lua
+local containsPoint = box:containsPoint(x: number, y: number)
+```
+Returns whether the specified point is within the box's bounds.
+
+```lua
+box:setX(x: number, anchorX: number = 0)
+```
+Sets the x position of a certain point along the x-axis of the box. The anchor will be remembered so that future changes to the width of the box will not change the position of the specified point.
+
+```lua
+box:setY(y: number, anchorY: number = 0)
+```
+Sets the y position of a certain point along the y-axis of the box. The anchor will be remembered so that future changes to the height of the box will not change the position of the specified point.
+
+```lua
+box:mousemoved(x: number, y: number, dx: number, dy: number, istouch: boolean)
+```
+Informs the box about mouse move events. The arguments correspond to those of the `love.mousemoved` callback.
+
+```lua
+box:mousepressed(x: number, y: number, button: number, istouch: boolean, presses: number)
+```
+Informs the box about mouse press events. The arguments correspond to those of the `love.mousepressed` callback.
+
+```lua
+box:mousereleased(x: number, y: number, button: number, istouch: boolean, presses: number)
+```
+Informs the box about mouse release events. The arguments correspond to those of the `love.mousereleased` callback.
+
+```lua
+box:draw()
+```
+Draws the box and its children.
 
 Contributing
 ------------
