@@ -208,26 +208,6 @@ function Box:containsPoint(x, y)
 end
 
 --[[
-	returns whether the box overlaps with another box
-	can take either left, top, right, bottom arguments
-	or a single table with x, y, width, and height properties
-	(can be another boxer Box or just whatever table)
-]]
-function Box:overlaps(a, b, c, d)
-	local x, y, width, height
-	if type(a) == 'table' then
-		assert(a.x and a.y and a.width and a.height)
-		x, y, width, height = a.x, a.y, a.width, a.height
-	else
-		x, y, width, height = a, b, c, d
-	end
-	return self.left < x + width
-	   and self.right > x
-	   and self.top < y + height
-	   and self.bottom > y
-end
-
---[[
 	sets the position of a certain point along the x-axis of the box (defined by anchorX)
 	0 = left, 0.5 = center, 1 = right, etc.
 	x can be a number or a function that returns a number
