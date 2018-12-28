@@ -5,7 +5,7 @@ Todo:
 	- [x] `onDrag`
 	- [x] `onEnter`/`onLeave`
 - [x] Make some properties readonly, like `pressed` and `hovered`
-- [ ] More thorough `options` validation
+- [x] More thorough `options` validation
 - [x] Allow accessing children by name
 - [x] Maybe find a more compact way to define properties that can be set to either a function or a value, since this is a common pattern I'm repeating a lot
 - [x] Reduce use of `get` function when dealing with styles

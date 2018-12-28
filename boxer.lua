@@ -392,11 +392,18 @@ function Box:_init(options, sizeIsOptional)
 	self._pressed = false
 
 	-- options
-	assert(one(options.x, options.left, options.center, options.right))
-	assert(one(options.y, options.top, options.middle, options.bottom))
+	if not options then
+		error('Must provide an options table to boxer.box()', 3)
+	end
+	if not one(options.x, options.left, options.center, options.right) then
+		error('Must provide exactly one horizontal position property (x/left/center/right)', 3)
+	end
+	if not one(options.y, options.top, options.middle, options.bottom) then
+		error('Must provide exactly one vertical position property (y/top/middle/bottom)', 3)
+	end
 	if not sizeIsOptional then
-		assert(options.width)
-		assert(options.height)
+		if not options.width then error('Must provide a width', 3) end
+		if not options.height then error('Must provide a height', 3) end
 	end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
@@ -435,8 +442,12 @@ end
 	position to be relative to the box.
 ]]
 function boxer.wrap(options)
-	assert(options)
-	assert(options.children and #options.children > 0)
+	if not options then
+		error('Must provide an options table to boxer.wrap()', 2)
+	end
+	if not (options.children and #options.children > 0) then
+		error('Must provide at least one child to wrap', 2)
+	end
 	local padding = options.padding or 0
 	-- get the bounds of the box
 	local left = options.children[1].left
@@ -523,8 +534,15 @@ end
 Text.__index, Text.__newindex = getMetamethods(Text, Box)
 
 function Text:_init(options)
-	assert(options.text)
-	assert(options.font)
+	if not options then
+		error('Must provide an options table to boxer.text()', 3)
+	end
+	if not options.text then
+		error('Must provide a text string to display', 3)
+	end
+	if not options.font then
+		error('Must provide a font to use', 3)
+	end
 	self.text = options.text
 	self.font = options.font
 	self.scaleX = options.scaleX or 1
@@ -572,9 +590,18 @@ end
 Paragraph.__index, Paragraph.__newindex = getMetamethods(Paragraph, Box)
 
 function Paragraph:_init(options)
-	assert(options.text)
-	assert(options.font)
-	assert(options.width)
+	if not options then
+		error('Must provide an options table to boxer.paragraph()', 3)
+	end
+	if not options.text then
+		error('Must provide a text string to display', 3)
+	end
+	if not options.font then
+		error('Must provide a font to use', 3)
+	end
+	if not options.width then
+		error('Must provide a maximum width for the paragraph', 3)
+	end
 	self.text = options.text
 	self.font = options.font
 	self.align = options.align
@@ -627,7 +654,12 @@ end
 Image.__index, Image.__newindex = getMetamethods(Image, Box)
 
 function Image:_init(options)
-	assert(options.image)
+	if not options then
+		error('Must provide an options table to boxer.image()', 3)
+	end
+	if not options.image then
+		error('Must provide an image to display', 3)
+	end
 	self.image = options.image
 	self.scaleX = options.scaleX or 1
 	self.scaleY = options.scaleY or self.scaleX
