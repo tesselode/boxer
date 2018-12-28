@@ -3,6 +3,25 @@ Boxer
 
 **Boxer** is a library for arranging and drawing shapes in LÖVE. It's best used for positioning rectangular objects, such as images and text. It also handles mouse events, making it a good base for UI work.
 
+Table of contents
+-----------------
+- [Installation](#installation)
+- [Usage](#usage)
+	- [Creating boxes](#creating-boxes)
+	- [Positioning boxes](#positioning-boxes)
+	- [Mouse events](#mouse-events)
+	- [Drawing boxes](#drawing-boxes)
+	- [Children](#children)
+	- [Images](#images)
+	- [Text](#text)
+- [API](#api)
+	- [Box](#box)
+	- [Text](#text)
+	- [Paragraph](#paragraph)
+	- [Image](#image)
+- [Contributing](#contributing)
+- [License](#license)
+
 Installation
 ------------
 To use Boxer, place boxer.lua in your project, and then `require` it in each file where you need to use it:
