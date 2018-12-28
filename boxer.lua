@@ -236,9 +236,9 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 	if self.disabled then return end
 	if self.clipChildren and not self:containsPoint(x, y) then
 		for _, child in ipairs(self.children) do
-			child:mouseoff()
+			child:_mouseoff()
 		end
-		self:mouseoff()
+		self:_mouseoff()
 		return
 	end
 	for i = #self.children, 1, -1 do
@@ -247,9 +247,9 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 		if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
 			for j = i - 1, 1, -1 do
 				local lowerChild = self.children[j]
-				lowerChild:mouseoff()
+				lowerChild:_mouseoff()
 			end
-			self:mouseoff()
+			self:_mouseoff()
 			return
 		end
 	end
@@ -274,7 +274,7 @@ end
 	used when a box shouldn't be hovered, but the mouse is technically over it
 	(outside of a clipping region, blocked by another box, etc.)
 ]]
-function Box:mouseoff()
+function Box:_mouseoff()
 	if self.disabled then return end
 	self._hoveredPrevious = self._hovered
 	self._hovered = false
@@ -325,7 +325,7 @@ function Box:mousereleased(x, y, button, istouch, presses)
 end
 
 -- draws the box's fill/outline
-function Box:drawSelf()
+function Box:_drawSelf()
 	local _, _, width, height = self:getRect()
 	if self:_getCurrentStyle 'outlineColor' then
 		love.graphics.setColor(self:_getCurrentStyle 'outlineColor')
@@ -341,7 +341,7 @@ function Box:drawSelf()
 end
 
 -- "pushes" a stencil onto the "stack". used for nested stencils
-function Box:pushStencil(stencilValue)
+function Box:_pushStencil(stencilValue)
 	love.graphics.push 'all'
 	local _, _, width, height = self:getRect()
 	love.graphics.stencil(function()
@@ -352,7 +352,7 @@ function Box:pushStencil(stencilValue)
 end
 
 -- "pops" a stencil from the "stack". used for nested stencils
-function Box:popStencil()
+function Box:_popStencil()
 	local _, _, width, height = self:getRect()
 	love.graphics.stencil(function()
 		love.graphics.rectangle('fill', 0, 0, width, height,
@@ -367,13 +367,13 @@ function Box:draw(stencilValue)
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
 	love.graphics.translate(self:getRect())
-	self:drawSelf()
+	self:_drawSelf()
 	if self.clipChildren then
-		self:pushStencil(stencilValue)
+		self:_pushStencil(stencilValue)
 		for _, child in ipairs(self.children) do
 			child:draw(stencilValue + 1)
 		end
-		self:popStencil()
+		self:_popStencil()
 	else
 		for _, child in ipairs(self.children) do
 			child:draw(stencilValue)
