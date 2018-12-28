@@ -102,7 +102,7 @@ Informs the box about mouse release events. The arguments correspond to those of
 ```lua
 box:draw()
 ```
-Draws the box and its children.
+Draws the box (if a style is set) and its children.
 
 #### Callbacks
 
@@ -146,6 +146,76 @@ Called when the box is clicked and dragged.
 - `disabled` (`boolean`) - whether the box should ignore mouse events.
 - `hovered` (`boolean`) (readonly) - whether the mouse is currently over the box.
 - `pressed` (`false | number`) (readonly) - the number of the mouse button the box is currently being held down by, or `false` if it is not being held down.
+
+### Text
+(inherits from Box)
+
+#### Constructors
+
+```lua
+local text = boxer.text {
+	x/left/center/right: number,
+	y/top/middle/bottom: number,
+	text: string,
+	font: Font,
+	...
+}
+```
+Creates a new text object. Position, text, and font properties are required, but any box or text properties can be included in the options table. Unlike the `Box` constructor, `width` and `height` are optional.
+
+#### Properties
+- `text` (`string` | `function -> string`) - the text content to draw.
+- `font` (`Font` | `function -> Font`) - the font to use for drawing. Fonts can be created using `love.graphics.newFont`.
+- `scaleX` (`number` | `function -> number`) - the horizontal scaling factor of the text. Changing this will affect the `width` of the text.
+- `scaleY` (`number` | `function -> number`) - the vertical scaling factor of the text. Changing this will affect the `height` of the text.
+- `width` (`number`) - the total width of the text. Changing this will affect the `scaleX` of the text.
+- `height` (`number`) - the total height of the text. Changing this will affect the `scaleY` of the text.
+
+### Paragraph
+(inherits from Box)
+
+#### Constructors
+
+```lua
+local paragraph = boxer.paragraph {
+	x/left/center/right: number,
+	y/top/middle/bottom: number,
+	width: number,
+	text: string,
+	font: Font,
+	...
+}
+```
+Creates a new paragraph object. Works similarly to the Text object, but the text is automatically split into lines depending on the `width` of the object.
+
+#### Properties
+- `text` (`string` | `function -> string`) - the text content to draw.
+- `font` (`Font` | `function -> Font`) - the font to use for drawing. Fonts can be created using `love.graphics.newFont`.
+- `align` (`string` | `function -> string`) - the alignment mode of the text. Can be `'left'`, `'center'`, `'right'`, or `'justify'`.
+- `width` (`number`) - the width that a line of text is allowed to span.
+- `height` (`number`) (readonly) - the total height of the paragraph. Unlike the Text object, this cannot be changed, as it is a product of the width of the box and the amount/size of text.
+
+### Image
+(inherits from Box)
+
+#### Constructors
+
+```lua
+local image = boxer.image {
+	x/left/center/right: number,
+	y/top/middle/bottom: number,
+	image: Image,
+	...
+}
+```
+Creates a new image object. Position and image properties are required, but any box or image properties can be included in the options table. Unlike the `Box` constructor, `width` and `height` are optional.
+
+#### Properties
+- `image` (`Image` | `function -> Image`) - the image to draw.
+- `scaleX` (`number` | `function -> number`) - the horizontal scaling factor of the image. Changing this will affect the `width` of the image.
+- `scaleY` (`number` | `function -> number`) - the vertical scaling factor of the image. Changing this will affect the `height` of the image.
+- `width` (`number`) - the total width of the image. Changing this will affect the `scaleX` of the image.
+- `height` (`number`) - the total height of the image. Changing this will affect the `scaleY` of the image.
 
 Contributing
 ------------
