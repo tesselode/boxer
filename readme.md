@@ -147,6 +147,13 @@ Called when the box is clicked and dragged.
 - `hovered` (`boolean`) (readonly) - whether the mouse is currently over the box.
 - `pressed` (`false | number`) (readonly) - the number of the mouse button the box is currently being held down by, or `false` if it is not being held down.
 
+#### Style properties
+- `outlineColor` (`table` | `function -> table`) - the color to draw the outline with.
+- `lineWidth` (`number` | `function -> number`) - the line width to use for drawing the outline.
+- `fillColor` (`table` | `function -> table`) - the color to draw the fill with.
+- `radiusX` (`number` | `function -> number`) - the horizontal radius of the borders of the box.
+- `radiusY` (`number` | `function -> number`) - the vertical radius of the borders of the box.
+
 ### Text
 (inherits from Box)
 
@@ -170,6 +177,9 @@ Creates a new text object. Position, text, and font properties are required, but
 - `scaleY` (`number` | `function -> number`) - the vertical scaling factor of the text. Changing this will affect the `height` of the text.
 - `width` (`number`) - the total width of the text. Changing this will affect the `scaleX` of the text.
 - `height` (`number`) - the total height of the text. Changing this will affect the `scaleY` of the text.
+
+#### Style properties
+- `color` (`table` | `function -> table`) - the color of the text.
 
 ### Paragraph
 (inherits from Box)
@@ -195,6 +205,9 @@ Creates a new paragraph object. Works similarly to the Text object, but the text
 - `width` (`number`) - the width that a line of text is allowed to span.
 - `height` (`number`) (readonly) - the total height of the paragraph. Unlike the Text object, this cannot be changed, as it is a product of the width of the box and the amount/size of text.
 
+#### Style properties
+- `color` (`table` | `function -> table`) - the color of the text.
+
 ### Image
 (inherits from Box)
 
@@ -216,6 +229,9 @@ Creates a new image object. Position and image properties are required, but any 
 - `scaleY` (`number` | `function -> number`) - the vertical scaling factor of the image. Changing this will affect the `height` of the image.
 - `width` (`number`) - the total width of the image. Changing this will affect the `scaleX` of the image.
 - `height` (`number`) - the total height of the image. Changing this will affect the `scaleY` of the image.
+
+#### Style properties
+- `color` (`table` | `function -> table`) - the color of the image (blends with the colors of the image content).
 
 Contributing
 ------------
