@@ -104,6 +104,49 @@ box:draw()
 ```
 Draws the box and its children.
 
+#### Callbacks
+
+```lua
+function box.onPress(button: number) ... end
+```
+Called when the box is clicked and released. Useful for creating buttons.
+
+```lua
+function box.onClick(button: number) ... end
+```
+Called as soon as the box is clicked.
+
+```lua
+function box.onEnter() ... end
+```
+Called when the mouse comes within bounds of the box.
+
+```lua
+function box.onLeave() ... end
+```
+Called when the mouse leaves the bounds of the box.
+
+```lua
+function box.onMove(relativeX: number, relativeY: number, displacementX: number, displacementY: number)
+```
+Called when the mouse is moved over the box. The arguments are the position of the mouse relative to the top-left corner of the box, and the amount the mouse was moved, respectively.
+
+```lua
+function box.onMove(button: number, displacementX: number, displacementY: number)
+```
+Called when the box is clicked and dragged.
+
+#### Properties
+- `name` (`string`) - the name of the box.
+- `style` (`table`) - the styles the box should use.
+- `children` (`table`) - a list of the objects contained within this box. Children at a higher index in the table are considered to be "above" those with a lower index. If a child has a `name` property, you can also access it via `children[name]`.
+- `clipChildren` (`boolean` | `function -> boolean`) - whether portions of the children outside of the box's bounds should be hidden and unclickable.
+- `transparent` (`boolean` | `function -> boolean`) - whether the box should allow mouse events to pass through to lower children in the same parent box.
+- `hidden` (`boolean`) - whether the box should be invisible.
+- `disabled` (`boolean`) - whether the box should ignore mouse events.
+- `hovered` (`boolean`) (readonly) - whether the mouse is currently over the box.
+- `pressed` (`false | number`) (readonly) - the number of the mouse button the box is currently being held down by, or `false` if it is not being held down.
+
 Contributing
 ------------
 Boxer is in early development, so feel free to open issues and make pull requests! Give me all of your good design thoughts, and if you use this library, let me know how it works for you!
