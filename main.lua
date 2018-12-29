@@ -9,6 +9,19 @@ local box = boxer.Box {
 		pressed = {fillColor = {.3, .3, .3}},
 	},
 	onPress = function() print 'hi!' end,
+	children = function()
+		if love.keyboard.isDown('space') then
+			return {
+				boxer.Box {
+					w = 10,
+					h = 10,
+					style = {idle = {fillColor = {1, 1, 1}}}
+				},
+			}
+		else
+			return {}
+		end
+	end,
 }
 
 function love.mousemoved(...)

@@ -29,6 +29,14 @@ local boxer = {
 
 --- utilities ---
 
+local function count(...)
+	local amount = 0
+	for i = 1, select('#', ...) do
+		if select(i, ...) then amount = amount + 1 end
+	end
+	return amount
+end
+
 --[[
 	many properties in boxer can be set to either a raw value (number, string, etc.)
 	or a function that returns a raw value. this function will call the function if
@@ -184,8 +192,19 @@ Box.properties = {
 	height = {type = 'dynamic', required = true},
 	w = {alias = 'width'},
 	h = {alias = 'height'},
+	name = {type = 'dynamic'},
+	style = {type = 'dynamic'},
+	children = {type = 'dynamic', default = {}},
 	clipChildren = {type = 'dynamic'},
 	transparent = {type = 'dynamic'},
+	hidden = {type = 'dynamic'},
+	disabled = {type = 'dynamic'},
+	onPress = {type = 'normal'},
+	onClick = {type = 'normal'},
+	onEnter = {type = 'normal'},
+	onLeave = {type = 'normal'},
+	onMove = {type = 'normal'},
+	onDrag = {type = 'normal'},
 	hovered = {type = 'normal', readonly = true},
 	pressed = {type = 'normal', readonly = true},
 }
@@ -423,32 +442,19 @@ function Box:new(options)
 	if not options then
 		error('Must provide an options table to boxer.box()', 3)
 	end
-	if options.width then self.width = options.width end
-	if options.height then self.height = options.height end
-	if options.w then self.w = options.w end
-	if options.h then self.h = options.h end
-	if options.x then self.x = options.x end
-	if options.left then self.left = options.left end
-	if options.center then self.center = options.center end
-	if options.right then self.right = options.right end
-	if options.y then self.y = options.y end
-	if options.top then self.top = options.top end
-	if options.middle then self.middle = options.middle end
-	if options.bottom then self.bottom = options.bottom end
-	self.onPress = options.onPress
-	self.onClick = options.onClick
-	self.onEnter = options.onEnter
-	self.onLeave = options.onLeave
-	self.onMove = options.onMove
-	self.onDrag = options.onDrag
-	self.style = options.style
-	self.children = options.children or {}
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
+	end
+	for k, v in pairs(options) do
+		if not Box.properties[k] then
+			error(k .. ' is not a valid property for boxes', 3)
+		end
+		self[k] = v
+	end
 	setmetatable(self.children, childrenMetatable)
-	self.clipChildren = options.clipChildren
-	self.transparent = options.transparent
-	self.name = options.name
-	self.hidden = options.hidden
-	self.disabled = options.disabled
 end
 
 boxer.Box = Box
