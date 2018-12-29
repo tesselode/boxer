@@ -27,6 +27,32 @@ local boxer = {
 	]]
 }
 
+local function newClass(parent)
+	local class = {}
+
+	function class:__index(k)
+		if class[k] then
+			return class[k]
+		elseif parent then
+			return parent.__index(self, k)
+		end
+	end
+
+	function class:extend() return newClass(self) end
+
+	setmetatable(class, {
+		__call = function(self, ...)
+			local instance = setmetatable({}, class)
+			if instance.new then instance:new(...) end
+			return instance
+		end,
+	})
+
+	return class
+end
+
+boxer.Class = newClass
+
 --- utilities ---
 
 -- returns whether exactly one of the arguments evaluates to true
