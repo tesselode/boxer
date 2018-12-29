@@ -28,22 +28,76 @@ local boxer = {
 }
 
 local function newClass(parent)
-	local class = {}
+	local class = {properties = {}}
+
+	function class:extend() return newClass(self) end
+
+	function class:_getProperty(propertyName)
+		local property = class.properties[propertyName]
+		assert(property, 'no property named ' .. propertyName .. ' exists')
+		assert(type(property) == 'table', 'property definitions must be tables')
+		if property.type == 'dynamic' then
+			local value = self['_' .. propertyName]
+			return type(value) == 'function' and value() or value
+		elseif property.type == 'normal' then
+			return self['_' .. propertyName]
+		elseif property.get then
+			return property.get(self)
+		end
+	end
+
+	function class:_setProperty(propertyName, value)
+		local property = class.properties[propertyName]
+		assert(property, 'no property named ' .. propertyName .. ' exists')
+		assert(type(property) == 'table', 'property definitions must be tables')
+		if property.readonly then
+			error(propertyName .. ' is a readonly value', 3)
+		end
+		if property.type == 'dynamic' or property.type == 'normal' then
+			self['_' .. propertyName] = value
+		elseif property.set then
+			property.set(self, value)
+		end
+	end
+
+	function class:_checkProperties(checked)
+		checked = checked or {}
+		for propertyName, property in pairs(class.properties) do
+			if not checked[propertyName] then
+				if property.required and not self[propertyName] then
+					error(propertyName .. ' is a required property', 3)
+				end
+				checked[propertyName] = true
+			end
+		end
+		if parent then parent._checkProperties(self, checked) end
+	end
 
 	function class:__index(k)
 		if class[k] then
 			return class[k]
+		elseif class.properties[k] then
+			return class._getProperty(self, k)
 		elseif parent then
 			return parent.__index(self, k)
 		end
 	end
 
-	function class:extend() return newClass(self) end
+	function class:__newindex(k, v)
+		if class.properties[k] then
+			class._setProperty(self, k, v)
+		elseif parent then
+			parent.__newindex(self, k, v)
+		else
+			rawset(self, k, v)
+		end
+	end
 
 	setmetatable(class, {
 		__call = function(self, ...)
 			local instance = setmetatable({}, class)
 			if instance.new then instance:new(...) end
+			instance:_checkProperties()
 			return instance
 		end,
 	})

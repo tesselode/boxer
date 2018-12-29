@@ -2,24 +2,29 @@ local boxer = require 'boxer'
 
 local Animal = boxer.Class()
 
-function Animal:new(times)
-	self.times = times
-end
-
-function Animal:say(sound)
-	for _ = 1, self.times do
-		print(sound)
-	end
-end
+Animal.properties = {
+	times = {required = true}
+}
 
 local Dog = Animal:extend()
 
-function Dog:bark()
-	self:say 'borkf'
+Dog.properties = {
+	times = {type = 'dynamic'}
+}
+
+function Dog:new(times)
+	self.times = times
 end
 
-local spot = Dog(5)
-local buster = Dog(1)
-buster:bark()
-print()
-spot:bark()
+function Dog:bark()
+	print()
+	for _ = 1, self.times do
+		print 'borkf'
+	end
+end
+
+local spot = Dog()
+
+function love.keypressed()
+	spot:bark()
+end
