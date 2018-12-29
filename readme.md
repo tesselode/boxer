@@ -36,11 +36,119 @@ Usage
 
 ### Creating boxes
 
+A box is the basic object that Boxer creates. To create a box, use `boxer.box`:
+
+```lua
+local box = boxer.box {
+	x = 500,
+	bottom = 300,
+	width = 50,
+	height = 75,
+}
+```
+
+To create a box, you have to define exactly one horizontal position property (`x`, `left`, `center`, or `right`) and one vertical position property (`y`, `top`, `middle`, or `bottom`), as well as `width` and `height` properties. These are the only required properties, but you can also pass in any other valid `Box` properties (see the [Box API](#box) for more details).
+
 ### Positioning boxes
+
+The easiest way to position boxes is to set the position properties. For example, this code will shift a box horizontally so its right edge is lined up with another box's left edge:
+
+```lua
+box2.right = box1.left
+```
+
+You can also set many box properties to a function, and the property will be automatically updated to the function's return value. For example, this code will keep a box's bottom edge aligned with the bottom of the window, even if the window is resized:
+
+```lua
+box.bottom = function()
+	return love.graphics.getHeight()
+end
+```
+
+If you need more control, you can use `getX` and `getY` to get the position of an arbitrary point along the x or y axis of a box:
+
+```lua
+local x = box:getX(2/3) -- gets the x coordinate 2/3rds of the way between the left and right side of the box
+local y = box:getY(.5) -- gets the y coordinate of the vertical center of the box
+```
+
+Similarly, you can use `setX` and `setY` to set the position of a box with an arbitrary anchor point:
+
+```lua
+box1:setX(box2:getX(.5), 1) -- sets the right edge of box1 to the horizontal center of box2
+```
+
+When you set a position, the anchor point is remembered, so that changing the width or height of the box will not affect the position you set.
+
+```lua
+box1:setX(box2:getX(.5), 1) -- sets the right edge of box1 to the horizontal center of box2
+box1.width = box1.width + 100
+-- the right edge of box1 will still be at the horizontal center of box2
+```
 
 ### Mouse events
 
+Boxes can handle various kinds of mouse events, but first they need to be hooked up to some of LÖVE's mouse callbacks:
+
+```lua
+function love.mousemoved(x, y, dx, dy, istouch)
+	box:mousemoved(x, y, dx, dy, istouch)
+end
+
+function love.mousepressed(x, y, button, istouch, presses)
+	box:mousepressed(x, y, button, istouch, presses)
+end
+
+function love.mousereleased(x, y, button, istouch, presses)
+	box:mousereleased(x, y, button, istouch, presses)
+end
+```
+
+Once that's done, we can define some callbacks on the box:
+
+```lua
+function box.onPress(button)
+	if button == 1 then
+		print 'hi!'
+	end
+end
+
+function box.onEnter()
+	print "i'm hovered now!"
+end
+```
+
+The full list of callbacks is in the [API](#box).
+
 ### Drawing boxes
+
+Boxes don't have any visual representation by default, but we can add some using the style system. Let's say we want the box to be dark gray with a white outline. We can implement that like this:
+
+```lua
+box.style = {
+	idle = {
+		fillColor = {.2, .2, .2},
+		outlineColor = {1, 1, 1},
+	},
+}
+```
+
+The `idle` style is for when the box isn't hovered or pressed. The `idle` style is required, but we can also define `hovered` and `pressed` styles which will be applied on top of the `idle` styles when the box is hovered or pressed. This code will make the button light up slightly when it's hovered, and light up a little less when it's pressed:
+
+```lua
+box.style = {
+	idle = {
+		fillColor = {.2, .2, .2},
+		outlineColor = {1, 1, 1},
+	},
+	hovered = {
+		fillColor = {.4, .4, .4},
+	},
+	pressed = {
+		fillColor = {.3, .3, .3},
+	},
+}
+```
 
 ### Children
 
