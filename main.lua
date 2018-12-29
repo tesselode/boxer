@@ -1,6 +1,8 @@
 local boxer = require 'boxer'
 
 local box = boxer.Box {
+	x = 50,
+	y = 50,
 	w = 100,
 	h = 100,
 	style = {
@@ -12,10 +14,8 @@ local box = boxer.Box {
 	children = function()
 		if love.keyboard.isDown('space') then
 			return {
-				boxer.Box {
-					w = 10,
-					h = 10,
-					style = {idle = {fillColor = {1, 1, 1}}}
+				boxer.Image {
+					image = love.graphics.newImage 'bean man.jpg',
 				},
 			}
 		else
@@ -38,4 +38,6 @@ end
 
 function love.draw()
 	box:draw()
+	love.graphics.setColor(1, 1, 1)
+	love.graphics.print(math.floor(collectgarbage('count')) .. 'kb')
 end

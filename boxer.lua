@@ -432,15 +432,16 @@ local childrenMetatable = {
 	end,
 }
 
-function Box:new(options)
-	-- mouse state
+function Box:_init()
 	self._hoveredPrevious = false
 	self._hovered = false
 	self._pressed = false
+	setmetatable(self.children, childrenMetatable)
+end
 
-	-- options
+function Box:new(options)
 	if not options then
-		error('Must provide an options table to boxer.box()', 3)
+		error('Must provide an options table to boxer.Box()', 3)
 	end
 	if count(options.x, options.left, options.center, options.right) > 1 then
 		error('Cannot provide more than one horizontal position property', 3)
@@ -454,7 +455,7 @@ function Box:new(options)
 		end
 		self[k] = v
 	end
-	setmetatable(self.children, childrenMetatable)
+	self:_init()
 end
 
 boxer.Box = Box
@@ -542,8 +543,9 @@ Text.properties = {
 	},
 	font = {type = 'dynamic', required = true},
 	text = {type = 'dynamic', required = true},
-	scaleX = {type = 'dynamic'},
-	scaleY = {type = 'dynamic'},
+	scaleX = {type = 'dynamic', default = 1},
+	scaleY = {type = 'dynamic', default = 1},
+	transparent = {type = 'dynamic', default = true},
 }
 
 function Text:draw()
@@ -555,19 +557,21 @@ end
 
 function Text:new(options)
 	if not options then
-		error('Must provide an options table to boxer.text()', 3)
+		error('Must provide an options table to boxer.Text()', 3)
 	end
-	if not options.text then
-		error('Must provide a text string to display', 3)
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
 	end
-	if not options.font then
-		error('Must provide a font to use', 3)
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
 	end
-	self.text = options.text
-	self.font = options.font
-	self.scaleX = options.scaleX or 1
-	self.scaleY = options.scaleY or self.scaleX
-	Box.new(self, options)
+	for k, v in pairs(options) do
+		if not Text.properties[k] or Box.properties[k] then
+			error(k .. ' is not a valid property for text', 3)
+		end
+		self[k] = v
+	end
+	self:_init()
 end
 
 boxer.Text = Text
@@ -605,21 +609,21 @@ end
 
 function Paragraph:new(options)
 	if not options then
-		error('Must provide an options table to boxer.paragraph()', 3)
+		error('Must provide an options table to boxer.Paragraph()', 3)
 	end
-	if not options.text then
-		error('Must provide a text string to display', 3)
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
 	end
-	if not options.font then
-		error('Must provide a font to use', 3)
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
 	end
-	if not options.width then
-		error('Must provide a maximum width for the paragraph', 3)
+	for k, v in pairs(options) do
+		if not Paragraph.properties[k] or Box.properties[k] then
+			error(k .. ' is not a valid property for paragraphs', 3)
+		end
+		self[k] = v
 	end
-	self.text = options.text
-	self.font = options.font
-	self.align = options.align
-	Box.new(self, options)
+	self:_init()
 end
 
 --[[
@@ -649,8 +653,8 @@ Image.properties = {
 		end,
 	},
 	image = {type = 'dynamic', required = true},
-	scaleX = {type = 'dynamic'},
-	scaleY = {type = 'dynamic'},
+	scaleX = {type = 'dynamic', default = 1},
+	scaleY = {type = 'dynamic', default = 1},
 }
 
 function Image:draw()
@@ -661,15 +665,21 @@ end
 
 function Image:new(options)
 	if not options then
-		error('Must provide an options table to boxer.image()', 3)
+		error('Must provide an options table to boxer.Image()', 3)
 	end
-	if not options.image then
-		error('Must provide an image to display', 3)
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
 	end
-	self.image = options.image
-	self.scaleX = options.scaleX or 1
-	self.scaleY = options.scaleY or self.scaleX
-	Box.new(self, options)
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
+	end
+	for k, v in pairs(options) do
+		if not Image.properties[k] or Box.properties[k] then
+			error(k .. ' is not a valid property for images', 3)
+		end
+		self[k] = v
+	end
+	self:_init()
 end
 
 boxer.Image = Image
