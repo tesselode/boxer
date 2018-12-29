@@ -392,7 +392,7 @@ function box.onMove(relativeX: number, relativeY: number, displacementX: number,
 Called when the mouse is moved over the box. The arguments are the position of the mouse relative to the top-left corner of the box, and the amount the mouse was moved, respectively.
 
 ```lua
-function box.onMove(button: number, displacementX: number, displacementY: number)
+function box.onDrag(button: number, displacementX: number, displacementY: number)
 ```
 Called when the box is clicked and dragged.
 
