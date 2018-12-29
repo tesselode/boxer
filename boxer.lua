@@ -29,20 +29,6 @@ local boxer = {
 
 --- utilities ---
 
--- returns whether exactly one of the arguments evaluates to true
-local function one(...)
-	local result = false
-	for i = 1, select('#', ...) do
-		local arg = select(i, ...)
-		if not result then
-			if arg then result = true end
-		else
-			if arg then return false end
-		end
-	end
-	return result
-end
-
 --[[
 	many properties in boxer can be set to either a raw value (number, string, etc.)
 	or a function that returns a raw value. this function will call the function if
@@ -66,7 +52,9 @@ local function newClass(parent)
 		local property = class.properties[propertyName]
 		assert(property, 'no property named ' .. propertyName .. ' exists')
 		assert(type(property) == 'table', 'property definitions must be tables')
-		if property.type == 'dynamic' then
+		if property.alias then
+			return self[property.alias]
+		elseif property.type == 'dynamic' then
 			return get(self['_' .. propertyName])
 		elseif property.type == 'normal' then
 			return self['_' .. propertyName]
@@ -82,11 +70,26 @@ local function newClass(parent)
 		if property.readonly then
 			error(propertyName .. ' is a readonly value', 3)
 		end
-		if property.type == 'dynamic' or property.type == 'normal' then
+		if property.alias then
+			self[property.alias] = value
+		elseif property.type == 'dynamic' or property.type == 'normal' then
 			self['_' .. propertyName] = value
 		elseif property.set then
 			property.set(self, value)
 		end
+	end
+
+	function class:_initProperties(initialized)
+		initialized = initialized or {}
+		for propertyName, property in pairs(class.properties) do
+			if not initialized[propertyName] then
+				if property.default then
+					self[propertyName] = property.default
+				end
+				initialized[propertyName] = true
+			end
+		end
+		if parent then parent._initProperties(self, initialized) end
 	end
 
 	function class:_checkProperties(checked)
@@ -125,6 +128,7 @@ local function newClass(parent)
 	setmetatable(class, {
 		__call = function(self, ...)
 			local instance = setmetatable({}, class)
+			instance:_initProperties()
 			if instance.new then instance:new(...) end
 			instance:_checkProperties()
 			return instance
@@ -151,11 +155,9 @@ Box.properties = {
 	x = {
 		get = function(self) return self:getX(0) end,
 		set = function(self, value) self:setX(value, 0) end,
+		default = 0,
 	},
-	left = {
-		get = function(self) return self:getX(0) end,
-		set = function(self, value) self:setX(value, 0) end,
-	},
+	left = {alias = 'x'},
 	center = {
 		get = function(self) return self:getX(.5) end,
 		set = function(self, value) self:setX(value, .5) end,
@@ -167,11 +169,9 @@ Box.properties = {
 	y = {
 		get = function(self) return self:getY(0) end,
 		set = function(self, value) self:setY(value, 0) end,
+		default = 0,
 	},
-	top = {
-		get = function(self) return self:getY(0) end,
-		set = function(self, value) self:setY(value, 0) end,
-	},
+	top = {alias = 'y'},
 	middle = {
 		get = function(self) return self:getY(.5) end,
 		set = function(self, value) self:setY(value, .5) end,
@@ -180,12 +180,14 @@ Box.properties = {
 		get = function(self) return self:getY(1) end,
 		set = function(self, value) self:setY(value, 1) end,
 	},
-	hovered = {type = 'normal', readonly = true},
-	pressed = {type = 'normal', readonly = true},
 	width = {type = 'dynamic', required = true},
 	height = {type = 'dynamic', required = true},
+	w = {alias = 'width'},
+	h = {alias = 'height'},
 	clipChildren = {type = 'dynamic'},
 	transparent = {type = 'dynamic'},
+	hovered = {type = 'normal', readonly = true},
+	pressed = {type = 'normal', readonly = true},
 }
 
 -- gets a style property given the box's state
@@ -201,7 +203,7 @@ end
 -- (0 = left, 0.5 = center, 1 = right, etc.)
 function Box:getX(offset)
 	offset = offset or 0
-	local width = self.width
+	local width = self.width or 0
 	local x = get(self._x)
 	x = x - width * self._anchorX
 	return x + width * offset
@@ -211,7 +213,7 @@ end
 -- (0 = top, 0.5 = middle, 1 = bottom, etc.)
 function Box:getY(offset)
 	offset = offset or 0
-	local height = self.height
+	local height = self.height or 0
 	local y = get(self._y)
 	y = y - height * self._anchorY
 	return y + height * offset
@@ -423,6 +425,8 @@ function Box:new(options)
 	end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
+	if options.w then self.w = options.w end
+	if options.h then self.h = options.h end
 	if options.x then self.x = options.x end
 	if options.left then self.left = options.left end
 	if options.center then self.center = options.center end
