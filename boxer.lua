@@ -50,6 +50,25 @@ local function get(value)
 	end
 end
 
+local function getType(value)
+	return type(value) == 'userdata' and value:type() or type(value)
+end
+
+local function isCompatibleType(property, value)
+	local t = getType(value)
+	if property.mode == 'dynamic' and t == 'function' then
+		return isCompatibleType(property, value())
+	end
+	if property.type == 'boolean' and t == 'nil' then
+		return true
+	end
+	if t == 'nil' and not property.required then
+		return true
+	end
+	if not property.type then return true end
+	return t == property.type
+end
+
 -- boxer.Class
 local function newClass(parent)
 	local class = {properties = {}}
@@ -62,9 +81,9 @@ local function newClass(parent)
 		assert(type(property) == 'table', 'property definitions must be tables')
 		if property.alias then
 			return self[property.alias]
-		elseif property.type == 'dynamic' then
+		elseif property.mode == 'dynamic' then
 			return get(self['_' .. propertyName])
-		elseif property.type == 'normal' then
+		elseif property.mode == 'normal' then
 			return self['_' .. propertyName]
 		elseif property.get then
 			return property.get(self)
@@ -80,7 +99,18 @@ local function newClass(parent)
 		end
 		if property.alias then
 			self[property.alias] = value
-		elseif property.type == 'dynamic' or property.type == 'normal' then
+		elseif property.mode == 'dynamic' then
+			if not isCompatibleType(property, value) then
+				error(propertyName .. ' must be a ' .. property.type
+					.. ' or a function that returns a ' .. property.type
+					.. ' (got ' .. getType(value) .. ') ', 5)
+			end
+			self['_' .. propertyName] = value
+		elseif property.mode == 'normal' then
+			if not isCompatibleType(property, value) then
+				error(propertyName .. ' must be a ' .. property.type
+					.. ' (got ' .. getType(value) .. ') ', 5)
+			end
 			self['_' .. propertyName] = value
 		elseif property.set then
 			property.set(self, value)
@@ -163,50 +193,56 @@ Box.properties = {
 	x = {
 		get = function(self) return self:getX(0) end,
 		set = function(self, value) self:setX(value, 0) end,
+		type = 'number',
 		default = 0,
 	},
 	left = {alias = 'x'},
 	center = {
 		get = function(self) return self:getX(.5) end,
 		set = function(self, value) self:setX(value, .5) end,
+		type = 'number',
 	},
 	right = {
 		get = function(self) return self:getX(1) end,
 		set = function(self, value) self:setX(value, 1) end,
+		type = 'number',
 	},
 	y = {
 		get = function(self) return self:getY(0) end,
 		set = function(self, value) self:setY(value, 0) end,
+		type = 'number',
 		default = 0,
 	},
 	top = {alias = 'y'},
 	middle = {
 		get = function(self) return self:getY(.5) end,
 		set = function(self, value) self:setY(value, .5) end,
+		type = 'number',
 	},
 	bottom = {
 		get = function(self) return self:getY(1) end,
 		set = function(self, value) self:setY(value, 1) end,
+		type = 'number',
 	},
-	width = {type = 'dynamic', required = true},
-	height = {type = 'dynamic', required = true},
+	width = {mode = 'dynamic', type = 'number', required = true},
+	height = {mode = 'dynamic', type = 'number', required = true},
 	w = {alias = 'width'},
 	h = {alias = 'height'},
-	name = {type = 'dynamic'},
-	style = {type = 'dynamic'},
-	children = {type = 'dynamic', default = {}},
-	clipChildren = {type = 'dynamic'},
-	transparent = {type = 'dynamic'},
-	hidden = {type = 'dynamic'},
-	disabled = {type = 'dynamic'},
-	onPress = {type = 'normal'},
-	onClick = {type = 'normal'},
-	onEnter = {type = 'normal'},
-	onLeave = {type = 'normal'},
-	onMove = {type = 'normal'},
-	onDrag = {type = 'normal'},
-	hovered = {type = 'normal', readonly = true},
-	pressed = {type = 'normal', readonly = true},
+	name = {mode = 'dynamic', type = 'string'},
+	style = {mode = 'dynamic', type = 'table'},
+	children = {mode = 'dynamic', type = 'table', default = {}},
+	clipChildren = {mode = 'dynamic', type = 'boolean'},
+	transparent = {mode = 'dynamic', type = 'boolean'},
+	hidden = {mode = 'dynamic', type = 'boolean'},
+	disabled = {mode = 'dynamic', type = 'boolean'},
+	onPress = {mode = 'normal', type = 'function'},
+	onClick = {mode = 'normal', type = 'function'},
+	onEnter = {mode = 'normal', type = 'function'},
+	onLeave = {mode = 'normal', type = 'function'},
+	onMove = {mode = 'normal', type = 'function'},
+	onDrag = {mode = 'normal', type = 'function'},
+	hovered = {mode = 'normal', type = 'boolean', readonly = true},
+	pressed = {mode = 'normal', type = 'boolean', readonly = true},
 }
 
 -- gets a style property given the box's state
@@ -529,6 +565,7 @@ Text.properties = {
 		set = function(self, width)
 			self.scaleX = width / self.font:getWidth(self.text)
 		end,
+		type = 'number',
 	},
 	height = {
 		get = function(self)
@@ -537,12 +574,13 @@ Text.properties = {
 		set = function(self, height)
 			self.scaleY = height / self.font:getHeight()
 		end,
+		type = 'number',
 	},
-	font = {type = 'dynamic', required = true},
-	text = {type = 'dynamic', required = true},
-	scaleX = {type = 'dynamic', default = 1},
-	scaleY = {type = 'dynamic', default = 1},
-	transparent = {type = 'dynamic', default = true},
+	font = {mode = 'dynamic', type = 'Font', required = true},
+	text = {mode = 'dynamic', type = 'string', required = true},
+	scaleX = {mode = 'dynamic', type = 'number', default = 1},
+	scaleY = {mode = 'dynamic', type = 'number', default = 1},
+	transparent = {mode = 'dynamic', type = 'boolean', default = true},
 }
 
 function Text:drawSelf()
@@ -590,10 +628,11 @@ Paragraph.properties = {
 		set = function(self, height)
 			error('Cannot set height of a paragraph directly', 2)
 		end,
+		type = 'number',
 	},
-	font = {type = 'dynamic', required = true},
-	text = {type = 'dynamic', required = true},
-	align = {type = 'dynamic'},
+	font = {mode = 'dynamic', type = 'Font', required = true},
+	text = {mode = 'dynamic', type = 'string', required = true},
+	align = {mode = 'dynamic', type = 'string'},
 }
 
 function Paragraph:drawSelf()
@@ -638,6 +677,7 @@ Image.properties = {
 		set = function(self, width)
 			self.scaleX = width / self.image:getWidth()
 		end,
+		type = 'number',
 	},
 	height = {
 		get = function(self)
@@ -646,10 +686,11 @@ Image.properties = {
 		set = function(self, height)
 			self.scaleY = height / self.image:getHeight()
 		end,
+		type = 'number',
 	},
-	image = {type = 'dynamic', required = true},
-	scaleX = {type = 'dynamic', default = 1},
-	scaleY = {type = 'dynamic', default = 1},
+	image = {mode = 'dynamic', type = 'Image', required = true},
+	scaleX = {mode = 'dynamic', type = 'number', default = 1},
+	scaleY = {mode = 'dynamic', type = 'number', default = 1},
 }
 
 function Image:drawSelf()
