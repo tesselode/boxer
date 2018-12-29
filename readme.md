@@ -150,11 +150,144 @@ box.style = {
 }
 ```
 
+See the [Box API](#box) for the full list of style properties.
+
 ### Children
+
+Boxes can act as containers for other boxes. To add a box as a child box, insert children into the `box.children` table:
+
+```lua
+table.insert(box.children, boxer.box {
+	...
+})
+```
+
+Boxes will pass mouse and draw events to their child boxes. Children later in the `box.children` list will be considered "higher up" than children earlier in the list. Children will block mouse events from reaching lower children, as well as the parent box, which is considered to be lower than all the children.
+
+In this example, there are two child boxes with the same size and position, but clicking them will only print "hi!".
+
+```lua
+local parent = boxer.box {
+	x = 0,
+	y = 0,
+	width = 500,
+	height = 500,
+	children = {
+		boxer.box {
+			x = 50,
+			y = 50,
+			width = 50,
+			height = 50,
+			onPress = function() print 'hello' end,
+		},
+		boxer.box {
+			x = 50,
+			y = 50,
+			width = 50,
+			height = 50,
+			onPress = function() print 'hi!' end,
+		},
+	}
+}
+```
+
+This is because the box on top is blocking mouse events from reaching the box on bottom. If you want to allow mouse events to pass through a child box, you can set that box's `transparent` property to true.
+
+```lua
+local parent = boxer.box {
+	x = 0,
+	y = 0,
+	width = 500,
+	height = 500,
+	children = {
+		boxer.box {
+			x = 50,
+			y = 50,
+			width = 50,
+			height = 50,
+			onPress = function() print 'hello' end,
+		},
+		boxer.box {
+			x = 50,
+			y = 50,
+			width = 50,
+			height = 50,
+			onPress = function() print 'hi!' end,
+			transparent = true,
+		},
+	}
+}
+-- now clicking within (50, 50) and (100, 100) will print both 'hi!' and 'hello'
+```
+
+You can also "wrap" multiple boxes in a parent box that will automatically set its bounds to perfectly contain all of the children using `boxer.wrap`:
+
+```lua
+local container = boxer.wrap {
+	children = {
+		boxer.box {x = 50, y = 50, width = 50, height = 50},
+		boxer.box {x = 200, y = 200, width = 50, height = 50},
+	},
+	padding = 32, -- optional property, adds padding to the box
+}
+```
 
 ### Images
 
+Boxer has a special object for images.
+
+```lua
+local image = boxer.image {
+	x = 25,
+	y = 25,
+	image = love.graphics.newImage 'bean man.jpg',
+	scaleX = 2,
+	style = {
+		idle = {color = {1, 1, 1, .5}},
+		hovered = {color = {1, 1, 1, 1}},
+	},
+}
+```
+
+Images work mostly the same as boxes, but the `width` and `height` properties are optional in `boxer.image`, as those are inferred from the image's dimensions. Images also have `scaleX` and `scaleY` properties, which set the image's width and height to a factor of the image's original size. You can also set `width` and `height`, which will change the dimensions of the image to an absolute value regardless of the image's dimensions.
+
 ### Text
+
+Boxer has two different objects for drawing text: `Text` and `Paragraph`.
+
+The `Text` object draws text on a single line (or multiple lines if the text string contains newlines).
+
+```lua
+local text = boxer.text {
+	x = 30,
+	y = 50,
+	font = love.graphics.newFont(32),
+	text = 'hello world!',
+	scaleX = .5,
+	scaleY = .5,
+	style = {
+		idle = {color = {1, 1, 1, .5}},
+		hovered = {color = {1, 1, 1, 1}},
+	},
+}
+```
+
+Similarly to images, `Text` objects have `scaleX` and `scaleY` properties as well as `width` and `height` properties.
+
+Boxer also provides a `Paragraph` object. The text in `Paragraph` objects will automatically wrap to new lines according to the maximum `width`.
+
+```lua
+local text = boxer.paragraph {
+	x = 30,
+	y = 50,
+	font = love.graphics.newFont(32),
+	text = 'imagine that this is a very long piece of text',
+	width = 400,
+	align = 'center', -- optional, can be 'left', 'center', 'right', or 'justify'
+}
+```
+
+Unlike `Text` objects, `Paragraph` objects don't have `scaleX` and `scaleY` properties. The `width` property is required in `boxer.paragraph`, and `height` is readonly, as that is inferred from the number of lines the text spans (as well as the font).
 
 API
 ---
