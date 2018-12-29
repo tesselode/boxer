@@ -211,7 +211,7 @@ Box.properties = {
 
 -- gets a style property given the box's state
 -- (idle/pressed/released)
-function Box:_getCurrentStyle(property)
+function Box:getCurrentStyle(property)
 	if not (self.style and self.style.idle) then return nil end
 	return self._pressed and self.style.pressed and get(self.style.pressed[property])
 		or self._hovered and self.style.hovered and get(self.style.hovered[property])
@@ -366,40 +366,37 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	end
 end
 
--- draws the box's fill/outline
-function Box:_drawSelf()
+function Box:drawSelf()
 	local _, _, width, height = self:getRect()
-	if self:_getCurrentStyle 'outlineColor' then
-		love.graphics.setColor(self:_getCurrentStyle 'outlineColor')
-		love.graphics.setLineWidth(self:_getCurrentStyle 'lineWidth' or 1)
+	if self:getCurrentStyle 'outlineColor' then
+		love.graphics.setColor(self:getCurrentStyle 'outlineColor')
+		love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
 		love.graphics.rectangle('line', 0, 0, width, height,
-			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
+			self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 	end
-	if self:_getCurrentStyle 'fillColor' then
-		love.graphics.setColor(self:_getCurrentStyle 'fillColor')
+	if self:getCurrentStyle 'fillColor' then
+		love.graphics.setColor(self:getCurrentStyle 'fillColor')
 		love.graphics.rectangle('fill', 0, 0, width, height,
-			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
+			self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 	end
+end
+
+function Box:stencil()
+	local _, _, width, height = self:getRect()
+	love.graphics.rectangle('fill', 0, 0, width, height,
+		self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 end
 
 -- "pushes" a stencil onto the "stack". used for nested stencils
 function Box:_pushStencil(stencilValue)
 	love.graphics.push 'all'
-	local _, _, width, height = self:getRect()
-	love.graphics.stencil(function()
-		love.graphics.rectangle('fill', 0, 0, width, height,
-			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
-	end, 'increment', 1, true)
+	love.graphics.stencil(function() self:stencil() end, 'increment', 1, true)
 	love.graphics.setStencilTest('greater', stencilValue)
 end
 
 -- "pops" a stencil from the "stack". used for nested stencils
 function Box:_popStencil()
-	local _, _, width, height = self:getRect()
-	love.graphics.stencil(function()
-		love.graphics.rectangle('fill', 0, 0, width, height,
-			self:_getCurrentStyle 'radiusX', self:_getCurrentStyle 'radiusY')
-	end, 'decrement', 1, true)
+	love.graphics.stencil(function() self:stencil() end, 'decrement', 1, true)
 	love.graphics.pop()
 end
 
@@ -409,7 +406,7 @@ function Box:draw(stencilValue)
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
 	love.graphics.translate(self:getRect())
-	self:_drawSelf()
+	self:drawSelf()
 	if self.clipChildren then
 		self:_pushStencil(stencilValue)
 		for _, child in ipairs(self.children) do
@@ -432,7 +429,7 @@ local childrenMetatable = {
 	end,
 }
 
-function Box:_init()
+function Box:init()
 	self._hoveredPrevious = false
 	self._hovered = false
 	self._pressed = false
@@ -455,7 +452,7 @@ function Box:new(options)
 		end
 		self[k] = v
 	end
-	self:_init()
+	self:init()
 end
 
 boxer.Box = Box
@@ -548,9 +545,8 @@ Text.properties = {
 	transparent = {type = 'dynamic', default = true},
 }
 
-function Text:draw()
-	if self.hidden then return end
-	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
+function Text:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
@@ -571,7 +567,7 @@ function Text:new(options)
 		end
 		self[k] = v
 	end
-	self:_init()
+	self:init()
 end
 
 boxer.Text = Text
@@ -600,9 +596,8 @@ Paragraph.properties = {
 	align = {type = 'dynamic'},
 }
 
-function Paragraph:draw()
-	if self.hidden then return end
-	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
+function Paragraph:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
@@ -623,7 +618,7 @@ function Paragraph:new(options)
 		end
 		self[k] = v
 	end
-	self:_init()
+	self:init()
 end
 
 --[[
@@ -657,9 +652,8 @@ Image.properties = {
 	scaleY = {type = 'dynamic', default = 1},
 }
 
-function Image:draw()
-	if self.hidden then return end
-	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
+function Image:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
@@ -679,7 +673,7 @@ function Image:new(options)
 		end
 		self[k] = v
 	end
-	self:_init()
+	self:init()
 end
 
 boxer.Image = Image
