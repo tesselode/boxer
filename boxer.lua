@@ -27,6 +27,36 @@ local boxer = {
 	]]
 }
 
+--- utilities ---
+
+-- returns whether exactly one of the arguments evaluates to true
+local function one(...)
+	local result = false
+	for i = 1, select('#', ...) do
+		local arg = select(i, ...)
+		if not result then
+			if arg then result = true end
+		else
+			if arg then return false end
+		end
+	end
+	return result
+end
+
+--[[
+	many properties in boxer can be set to either a raw value (number, string, etc.)
+	or a function that returns a raw value. this function will call the function if
+	necessary and return the raw value.
+]]
+local function get(value)
+	if type(value) == 'function' then
+		return value()
+	else
+		return value
+	end
+end
+
+-- boxer.Class
 local function newClass(parent)
 	local class = {properties = {}}
 
@@ -37,8 +67,7 @@ local function newClass(parent)
 		assert(property, 'no property named ' .. propertyName .. ' exists')
 		assert(type(property) == 'table', 'property definitions must be tables')
 		if property.type == 'dynamic' then
-			local value = self['_' .. propertyName]
-			return type(value) == 'function' and value() or value
+			return get(self['_' .. propertyName])
 		elseif property.type == 'normal' then
 			return self['_' .. propertyName]
 		elseif property.get then
@@ -107,84 +136,6 @@ end
 
 boxer.Class = newClass
 
---- utilities ---
-
--- returns whether exactly one of the arguments evaluates to true
-local function one(...)
-	local result = false
-	for i = 1, select('#', ...) do
-		local arg = select(i, ...)
-		if not result then
-			if arg then result = true end
-		else
-			if arg then return false end
-		end
-	end
-	return result
-end
-
---[[
-	many properties in boxer can be set to either a raw value (number, string, etc.)
-	or a function that returns a raw value. this function will call the function if
-	necessary and return the raw value.
-]]
-local function get(value)
-	if type(value) == 'function' then
-		return value()
-	else
-		return value
-	end
-end
-
---[[
-	gets an instance property. looks for a property.get function. if that's not found,
-	defaults to getting self._propertyName.
-]]
-local function getProperty(self, property, propertyName)
-	if type(property) == 'table' and property.get then
-		return property.get(self)
-	else
-		return get(self['_' .. propertyName])
-	end
-end
-
---[[
-	sets an instance property. looks for a property.set function. if that's not found,
-	defaults to setting self._propertyName.
-]]
-local function setProperty(self, property, propertyName, value)
-	if type(property) == 'table' and property.set then
-		property.set(self, value)
-	else
-		self['_' .. propertyName] = value
-	end
-end
-
--- gets the metamethods of a class, given the class table and an optional parent
-local function getMetamethods(class, parent)
-	local function __index(self, k)
-		if class.properties[k] then
-			return getProperty(self, class.properties[k], k)
-		elseif parent and parent.properties[k] then
-			return getProperty(self, parent.properties[k], k)
-		elseif class[k] then
-			return class[k]
-		elseif parent then
-			return parent[k]
-		end
-	end
-	local function __newindex(self, k, v)
-		if class.properties[k] then
-			setProperty(self, class.properties[k], k, v)
-		elseif parent and parent.properties[k] then
-			setProperty(self, parent.properties[k], k, v)
-		else
-			rawset(self, k, v)
-		end
-	end
-	return __index, __newindex
-end
-
 --[[
 	--- Boxes ---
 	The basic box class. Handles a bunch of cool stuff, like:
@@ -194,57 +145,47 @@ end
 	- drawing rectangles (wow!)
 ]]
 
-local Box = {
-	properties = {
-		x = {
-			get = function(self) return self:getX(0) end,
-			set = function(self, value) self:setX(value, 0) end,
-		},
-		left = {
-			get = function(self) return self:getX(0) end,
-			set = function(self, value) self:setX(value, 0) end,
-		},
-		center = {
-			get = function(self) return self:getX(.5) end,
-			set = function(self, value) self:setX(value, .5) end,
-		},
-		right = {
-			get = function(self) return self:getX(1) end,
-			set = function(self, value) self:setX(value, 1) end,
-		},
-		y = {
-			get = function(self) return self:getY(0) end,
-			set = function(self, value) self:setY(value, 0) end,
-		},
-		top = {
-			get = function(self) return self:getY(0) end,
-			set = function(self, value) self:setY(value, 0) end,
-		},
-		middle = {
-			get = function(self) return self:getY(.5) end,
-			set = function(self, value) self:setY(value, .5) end,
-		},
-		bottom = {
-			get = function(self) return self:getY(1) end,
-			set = function(self, value) self:setY(value, 1) end,
-		},
-		hovered = {
-			get = function(self) return self._hovered end,
-			set = function(self, value)
-				error('Cannot set hovered, as it is a readonly property.', 4)
-			end,
-		},
-		pressed = {
-			get = function(self) return self._pressed end,
-			set = function(self, value)
-				error('Cannot set pressed, as it is a readonly property.', 4)
-			end,
-		},
-		width = true,
-		height = true,
-		clipChildren = true,
-		transparent = true,
-	}
+local Box = newClass()
+
+Box.properties = {
+	x = {
+		get = function(self) return self:getX(0) end,
+		set = function(self, value) self:setX(value, 0) end,
+	},
+	left = {
+		get = function(self) return self:getX(0) end,
+		set = function(self, value) self:setX(value, 0) end,
+	},
+	center = {
+		get = function(self) return self:getX(.5) end,
+		set = function(self, value) self:setX(value, .5) end,
+	},
+	right = {
+		get = function(self) return self:getX(1) end,
+		set = function(self, value) self:setX(value, 1) end,
+	},
+	y = {
+		get = function(self) return self:getY(0) end,
+		set = function(self, value) self:setY(value, 0) end,
+	},
+	top = {
+		get = function(self) return self:getY(0) end,
+		set = function(self, value) self:setY(value, 0) end,
+	},
+	middle = {
+		get = function(self) return self:getY(.5) end,
+		set = function(self, value) self:setY(value, .5) end,
+	},
+	bottom = {
+		get = function(self) return self:getY(1) end,
+		set = function(self, value) self:setY(value, 1) end,
+	},
+	hovered = {type = 'normal', readonly = true},
+	pressed = {type = 'normal', readonly = true},
+	width = {type = 'dynamic', required = true},
+	height = {type = 'dynamic', required = true},
+	clipChildren = {type = 'dynamic'},
+	transparent = {type = 'dynamic'},
 }
 
 -- gets a style property given the box's state
@@ -462,8 +403,6 @@ function Box:draw(stencilValue)
 	love.graphics.pop()
 end
 
-Box.__index, Box.__newindex = getMetamethods(Box)
-
 local childrenMetatable = {
 	__index = function(self, k)
 		for _, child in ipairs(self) do
@@ -472,7 +411,7 @@ local childrenMetatable = {
 	end,
 }
 
-function Box:_init(options, sizeIsOptional)
+function Box:new(options)
 	-- mouse state
 	self._hoveredPrevious = false
 	self._hovered = false
@@ -488,10 +427,8 @@ function Box:_init(options, sizeIsOptional)
 	if not one(options.y, options.top, options.middle, options.bottom) then
 		error('Must provide exactly one vertical position property (y/top/middle/bottom)', 3)
 	end
-	if not sizeIsOptional then
-		if not options.width then error('Must provide a width', 3) end
-		if not options.height then error('Must provide a height', 3) end
-	end
+	if not options.width then error('Must provide a width', 3) end
+	if not options.height then error('Must provide a height', 3) end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
 	if options.x then self.x = options.x end
@@ -518,11 +455,7 @@ function Box:_init(options, sizeIsOptional)
 	self.disabled = options.disabled
 end
 
-function boxer.box(options)
-	local box = setmetatable({}, Box)
-	box:_init(options)
-	return box
-end
+boxer.Box = Box
 
 --[[
 	creates a box around a number of children and adjusts the children's
@@ -618,8 +551,6 @@ function Text:draw()
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
-Text.__index, Text.__newindex = getMetamethods(Text, Box)
-
 function Text:_init(options)
 	if not options then
 		error('Must provide an options table to boxer.text()', 3)
@@ -673,8 +604,6 @@ function Paragraph:draw()
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
-
-Paragraph.__index, Paragraph.__newindex = getMetamethods(Paragraph, Box)
 
 function Paragraph:_init(options)
 	if not options then
@@ -737,8 +666,6 @@ function Image:draw()
 	love.graphics.setColor(self:_getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
-
-Image.__index, Image.__newindex = getMetamethods(Image, Box)
 
 function Image:_init(options)
 	if not options then

@@ -1,30 +1,30 @@
 local boxer = require 'boxer'
 
-local Animal = boxer.Class()
-
-Animal.properties = {
-	times = {required = true}
+local box = boxer.Box {
+	x = 50,
+	y = 50,
+	width = 100,
+	height = 100,
+	style = {
+		idle = {fillColor = {.2, .2, .2}},
+		hovered = {fillColor = {.4, .4, .4}},
+		pressed = {fillColor = {.3, .3, .3}},
+	},
+	onPress = function() print 'hi!' end,
 }
 
-local Dog = Animal:extend()
-
-Dog.properties = {
-	times = {type = 'dynamic'}
-}
-
-function Dog:new(times)
-	self.times = times
+function love.mousemoved(...)
+	box:mousemoved(...)
 end
 
-function Dog:bark()
-	print()
-	for _ = 1, self.times do
-		print 'borkf'
-	end
+function love.mousepressed(...)
+	box:mousepressed(...)
 end
 
-local spot = Dog()
+function love.mousereleased(...)
+	box:mousereleased(...)
+end
 
-function love.keypressed()
-	spot:bark()
+function love.draw()
+	box:draw()
 end
