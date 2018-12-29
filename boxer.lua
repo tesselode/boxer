@@ -421,14 +421,6 @@ function Box:new(options)
 	if not options then
 		error('Must provide an options table to boxer.box()', 3)
 	end
-	if not one(options.x, options.left, options.center, options.right) then
-		error('Must provide exactly one horizontal position property (x/left/center/right)', 3)
-	end
-	if not one(options.y, options.top, options.middle, options.bottom) then
-		error('Must provide exactly one vertical position property (y/top/middle/bottom)', 3)
-	end
-	if not options.width then error('Must provide a width', 3) end
-	if not options.height then error('Must provide a height', 3) end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
 	if options.x then self.x = options.x end
@@ -519,29 +511,29 @@ end
 	and scaleY, respectively.
 ]]
 
-local Text = {
-	properties = {
-		width = {
-			get = function(self)
-				return self.font:getWidth(self.text) * self.scaleX
-			end,
-			set = function(self, width)
-				self.scaleX = width / self.font:getWidth(self.text)
-			end,
-		},
-		height = {
-			get = function(self)
-				return self.font:getHeight() * self.scaleY
-			end,
-			set = function(self, height)
-				self.scaleY = height / self.font:getHeight()
-			end,
-		},
-		font = true,
-		text = true,
-		scaleX = true,
-		scaleY = true,
-	}
+local Text = Box:extend()
+
+Text.properties = {
+	width = {
+		get = function(self)
+			return self.font:getWidth(self.text) * self.scaleX
+		end,
+		set = function(self, width)
+			self.scaleX = width / self.font:getWidth(self.text)
+		end,
+	},
+	height = {
+		get = function(self)
+			return self.font:getHeight() * self.scaleY
+		end,
+		set = function(self, height)
+			self.scaleY = height / self.font:getHeight()
+		end,
+	},
+	font = {type = 'dynamic', required = true},
+	text = {type = 'dynamic', required = true},
+	scaleX = {type = 'dynamic'},
+	scaleY = {type = 'dynamic'},
 }
 
 function Text:draw()
@@ -551,7 +543,7 @@ function Text:draw()
 	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
-function Text:_init(options)
+function Text:new(options)
 	if not options then
 		error('Must provide an options table to boxer.text()', 3)
 	end
@@ -565,14 +557,10 @@ function Text:_init(options)
 	self.font = options.font
 	self.scaleX = options.scaleX or 1
 	self.scaleY = options.scaleY or self.scaleX
-	Box._init(self, options, true)
+	Box.new(self, options)
 end
 
-function boxer.text(options)
-	local text = setmetatable({}, Text)
-	text:_init(options)
-	return text
-end
+boxer.Text = Text
 
 --[[
 	--- Paragraphs ---
@@ -581,21 +569,21 @@ end
 	the number of lines the text uses.
 ]]
 
-local Paragraph = {
-	properties = {
-		height = {
-			get = function(self)
-				local _, lines = self.font:getWrap(self.text, self.width)
-				return #lines * self.font:getHeight() * self.font:getLineHeight()
-			end,
-			set = function(self, height)
-				error('Cannot set height of a paragraph directly', 2)
-			end,
-		},
-		font = true,
-		text = true,
-		align = true,
-	}
+local Paragraph = Box:extend()
+
+Paragraph.properties = {
+	height = {
+		get = function(self)
+			local _, lines = self.font:getWrap(self.text, self.width)
+			return #lines * self.font:getHeight() * self.font:getLineHeight()
+		end,
+		set = function(self, height)
+			error('Cannot set height of a paragraph directly', 2)
+		end,
+	},
+	font = {type = 'dynamic', required = true},
+	text = {type = 'dynamic', required = true},
+	align = {type = 'dynamic'},
 }
 
 function Paragraph:draw()
@@ -605,7 +593,7 @@ function Paragraph:draw()
 	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
 end
 
-function Paragraph:_init(options)
+function Paragraph:new(options)
 	if not options then
 		error('Must provide an options table to boxer.paragraph()', 3)
 	end
@@ -621,13 +609,7 @@ function Paragraph:_init(options)
 	self.text = options.text
 	self.font = options.font
 	self.align = options.align
-	Box._init(self, options, true)
-end
-
-function boxer.paragraph(options)
-	local paragraph = setmetatable({}, Paragraph)
-	paragraph:_init(options)
-	return paragraph
+	Box.new(self, options)
 end
 
 --[[
@@ -637,28 +619,28 @@ end
 	scaleX and scaleY.
 ]]
 
-local Image = {
-	properties = {
-		width = {
-			get = function(self)
-				return self.image:getWidth() * self.scaleX
-			end,
-			set = function(self, width)
-				self.scaleX = width / self.image:getWidth()
-			end,
-		},
-		height = {
-			get = function(self)
-				return self.image:getHeight() * self.scaleY
-			end,
-			set = function(self, height)
-				self.scaleY = height / self.image:getHeight()
-			end,
-		},
-		image = true,
-		scaleX = true,
-		scaleY = true,
-	}
+local Image = Box:extend()
+
+Image.properties = {
+	width = {
+		get = function(self)
+			return self.image:getWidth() * self.scaleX
+		end,
+		set = function(self, width)
+			self.scaleX = width / self.image:getWidth()
+		end,
+	},
+	height = {
+		get = function(self)
+			return self.image:getHeight() * self.scaleY
+		end,
+		set = function(self, height)
+			self.scaleY = height / self.image:getHeight()
+		end,
+	},
+	image = {type = 'dynamic', required = true},
+	scaleX = {type = 'dynamic'},
+	scaleY = {type = 'dynamic'},
 }
 
 function Image:draw()
@@ -667,7 +649,7 @@ function Image:draw()
 	love.graphics.draw(self.image, self.x, self.y, 0, self.scaleX, self.scaleY)
 end
 
-function Image:_init(options)
+function Image:new(options)
 	if not options then
 		error('Must provide an options table to boxer.image()', 3)
 	end
@@ -677,13 +659,9 @@ function Image:_init(options)
 	self.image = options.image
 	self.scaleX = options.scaleX or 1
 	self.scaleY = options.scaleY or self.scaleX
-	Box._init(self, options, true)
+	Box.new(self, options)
 end
 
-function boxer.image(options)
-	local image = setmetatable({}, Image)
-	image:_init(options)
-	return image
-end
+boxer.Image = Image
 
 return boxer

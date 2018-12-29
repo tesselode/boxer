@@ -10,6 +10,20 @@ local box = boxer.Box {
 		hovered = {fillColor = {.4, .4, .4}},
 		pressed = {fillColor = {.3, .3, .3}},
 	},
+	children = {
+		boxer.Text {
+			font = love.graphics.newFont(32),
+			text = 'hello world!',
+			x = 0,
+			y = 0,
+			transparent = true,
+		},
+		boxer.Image {
+			image = love.graphics.newImage 'bean man.jpg',
+			x = 0,
+			y = 50,
+		}
+	},
 	onPress = function() print 'hi!' end,
 }
 
