@@ -230,7 +230,7 @@ Box.properties = {
 	h = {alias = 'height'},
 	name = {mode = 'dynamic', type = 'string'},
 	style = {mode = 'dynamic', type = 'table'},
-	children = {mode = 'dynamic', type = 'table', default = {}},
+	children = {mode = 'dynamic', type = 'table'},
 	clipChildren = {mode = 'dynamic', type = 'boolean'},
 	transparent = {mode = 'dynamic', type = 'boolean'},
 	hidden = {mode = 'dynamic', type = 'boolean'},
@@ -469,6 +469,7 @@ function Box:init()
 	self._hoveredPrevious = false
 	self._hovered = false
 	self._pressed = false
+	self.children = self.children or {}
 	setmetatable(self.children, childrenMetatable)
 end
 
