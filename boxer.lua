@@ -600,7 +600,7 @@ function Text:new(options)
 		error('Cannot provide more than one vertical position property', 3)
 	end
 	for k, v in pairs(options) do
-		if not Text.properties[k] or Box.properties[k] then
+		if not (Text.properties[k] or Box.properties[k]) then
 			error(k .. ' is not a valid property for text', 3)
 		end
 		self[k] = v
@@ -652,7 +652,7 @@ function Paragraph:new(options)
 		error('Cannot provide more than one vertical position property', 3)
 	end
 	for k, v in pairs(options) do
-		if not Paragraph.properties[k] or Box.properties[k] then
+		if not (Paragraph.properties[k] or Box.properties[k]) then
 			error(k .. ' is not a valid property for paragraphs', 3)
 		end
 		self[k] = v
@@ -709,7 +709,7 @@ function Image:new(options)
 		error('Cannot provide more than one vertical position property', 3)
 	end
 	for k, v in pairs(options) do
-		if not Image.properties[k] or Box.properties[k] then
+		if not (Image.properties[k] or Box.properties[k]) then
 			error(k .. ' is not a valid property for images', 3)
 		end
 		self[k] = v
