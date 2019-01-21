@@ -15,6 +15,7 @@ local box = boxer.box {
 			fillColor = {.5, .5, .5},
 		},
 	},
+	onPress = function() print 'hello!' end,
 	children = {
 		boxer.box {
 			x = 25,
@@ -25,13 +26,27 @@ local box = boxer.box {
 				idle = {
 					fillColor = {1, 0, 0},
 				},
+				hovered = {
+					fillColor = {1, 1, 1},
+				}
 			},
+			onPress = function() print 'hi!' end,
 		},
 	},
-	clipChildren = function()
-		return love.timer.getTime() % 1 > .5
-	end,
+	clipChildren = true,
 }
+
+function love.mousemoved(x, y, dx, dy, istouch)
+	box:mousemoved(x, y, dx, dy, istouch)
+end
+
+function love.mousepressed(x, y, button, istouch, presses)
+	box:mousepressed(x, y, button, istouch, presses)
+end
+
+function love.mousereleased(x, y, button, istouch, presses)
+	box:mousereleased(x, y, button, istouch, presses)
+end
 
 function love.draw()
 	box:draw()

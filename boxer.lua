@@ -111,6 +111,103 @@ function Box:setY(y, anchorY)
 	self._y, self._anchorY = y, anchorY
 end
 
+--[[
+	tells the box about mouse movement. corresponds to love.mousemoved
+	mousemoved events will also be passed to child boxes, and child boxes will
+	block other child boxes behind them (unless they're transparent)
+]]
+function Box:mousemoved(x, y, dx, dy, istouch)
+	if self.disabled then return end
+	if self.clipChildren and not self:containsPoint(x, y) then
+		for _, child in ipairs(self.children) do
+			child:_mouseoff()
+		end
+		self:_mouseoff()
+		return
+	end
+	for i = #self.children, 1, -1 do
+		local child = self.children[i]
+		child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
+		if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
+			for j = i - 1, 1, -1 do
+				local lowerChild = self.children[j]
+				lowerChild:_mouseoff()
+			end
+			self:_mouseoff()
+			return
+		end
+	end
+	self._hoveredPrevious = self._hovered
+	self._hovered = self:containsPoint(x, y)
+	if self.onMove and self._hovered then
+		self.onMove(x - self.x, y - self.y, dx, dy)
+	end
+	if self.onDrag and self._pressed then
+		self.onDrag(self._pressed, dx, dy)
+	end
+	if self._hovered and not self._hoveredPrevious and self.onEnter then
+		self.onEnter()
+	end
+	if not self._hovered and self._hoveredPrevious and self.onLeave then
+		self.onLeave()
+	end
+end
+
+--[[
+	tells a box that the mouse is no longer hovering it.
+	used when a box shouldn't be hovered, but the mouse is technically over it
+	(outside of a clipping region, blocked by another box, etc.)
+]]
+function Box:_mouseoff()
+	if self.disabled then return end
+	self._hoveredPrevious = self._hovered
+	self._hovered = false
+	if not self._hovered and self._hoveredPrevious and self.onLeave then
+		self.onLeave()
+	end
+end
+
+--[[
+	tells a box that a mouse button was pressed. corresponds to love.mousepressed
+	also tells child boxes about mouse presses
+]]
+function Box:mousepressed(x, y, button, istouch, presses)
+	if self.disabled then return end
+	if self.clipChildren and not self:containsPoint(x, y) then
+		return
+	end
+	for i = #self.children, 1, -1 do
+		local child = self.children[i]
+		if child:containsPoint(x - self.x, y - self.y) then
+			child:mousepressed(x - self.x, y - self.y, button, istouch, presses)
+			if not child.transparent then return end
+		end
+	end
+	if not self._pressed and self:containsPoint(x, y) then
+		self._pressed = button
+		if self.onClick then self.onClick(button) end
+	end
+end
+
+--[[
+	tells a box that a mouse button was released. corresponds to love.mousereleased
+	also tells child boxes about mouse releases
+]]
+function Box:mousereleased(x, y, button, istouch, presses)
+	-- mouse releases should trigger regardless of whether the box is hovered or not,
+	-- so we don't bother with blocking/clipping checks here
+	if self.disabled then return end
+	if button == self._pressed then
+		self._pressed = false
+		if self.onPress and self._hovered then
+			self.onPress(button)
+		end
+	end
+	for _, child in ipairs(self.children) do
+		child:mousereleased(x, y, button, istouch, presses)
+	end
+end
+
 function Box:drawSelf()
     local _, _, width, height = self:getRect()
 	if self:getCurrentStyle 'fillColor' then
