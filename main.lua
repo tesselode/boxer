@@ -2,22 +2,12 @@ local boxer = require 'boxer'
 
 local box = boxer.wrap {
 	children = {
-		boxer.box {
-			x = 250,
-			y = 75,
-			width = 200,
-			height = 200,
-			style = {
-				idle = {
-					fillColor = {1, 0, 0},
-				},
-				hovered = {
-					fillColor = {1, 1, 1},
-				}
-			},
-			onPress = function() print 'hi!' end,
-			transparent = function() return love.keyboard.isDown 'space' end,
-		},
+		boxer.text {
+			font = love.graphics.newFont(32),
+			text = 'Hello world!',
+			scaleX = function() return .5 + math.sin(love.timer.getTime()) end,
+			scaleY = 1.5,
+		}
 	},
 	padding = 50,
 }

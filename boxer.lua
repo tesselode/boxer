@@ -394,4 +394,86 @@ function boxer.wrap(options)
 	}
 end
 
+local Text = {}
+
+function Text:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	love.graphics.setFont(self.font)
+	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
+end
+
+function Text:__index(k)
+	if k == 'font' then
+		return get(self._font)
+	elseif k == 'text' then
+		return get(self._text)
+	elseif k == 'width' then
+		return self.font:getWidth(self.text) * self.scaleX
+	elseif k == 'height' then
+		return self.font:getHeight() * self.scaleY
+	elseif k == 'scaleX' then
+		return get(self._scaleX)
+	elseif k == 'scaleY' then
+		return get(self._scaleY)
+	elseif Text[k] then
+		return Text[k]
+	end
+	return Box.__index(self, k)
+end
+
+function Text:__newindex(k, v)
+	if k == 'font' then
+		self._font = v
+	elseif k == 'text' then
+		self._text = v
+	elseif k == 'width' then
+		self.scaleX = v / self.font:getWidth(self.text)
+	elseif k == 'height' then
+		self.scaleY = v / self.font:getHeight()
+	elseif k == 'scaleX' then
+		self._scaleX = v
+	elseif k == 'scaleY' then
+		self._scaleY = v
+	else
+		Box.__newindex(self, k, v)
+	end
+end
+
+function boxer.text(options)
+	-- validate options
+	if not options.text then
+		error('Must provide a text string', 2)
+	end
+	if not options.font then
+		error('Must provide a font', 2)
+	end
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 2)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 2)
+	end
+	if count(options.width, options.scaleX) > 1 then
+		error('Cannot provide both width and scaleX', 2)
+	end
+	if count(options.height, options.scaleY) > 1 then
+		error('Cannot provide both height and scaleY', 2)
+	end
+	local text = setmetatable({
+		-- initial internal state
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, Text)
+	-- set properties
+	text.text = options.text
+	text.font = options.font
+	text.x, text.y = 0, 0
+	text.transparent = true
+	for k, v in pairs(options) do text[k] = v end
+	text.children = text.children or {}
+	setmetatable(text.children, childrenMetatable)
+	return text
+end
+
 return boxer
