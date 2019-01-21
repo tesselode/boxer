@@ -399,7 +399,7 @@ local Text = {}
 function Text:drawSelf()
 	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
-	love.graphics.print(self.text, self.x, self.y, 0, self.scaleX, self.scaleY)
+	love.graphics.print(self.text, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
 function Text:__index(k)
@@ -469,6 +469,7 @@ function boxer.text(options)
 	text.text = options.text
 	text.font = options.font
 	text.x, text.y = 0, 0
+	text.scaleX, text.scaleY = 1, 1
 	text.transparent = true
 	for k, v in pairs(options) do text[k] = v end
 	text.children = text.children or {}
@@ -481,7 +482,7 @@ local Paragraph = {}
 function Paragraph:drawSelf()
 	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
 	love.graphics.setFont(self.font)
-	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
+	love.graphics.printf(self.text, 0, 0, self.width, self.align)
 end
 
 function Paragraph:__index(k)
@@ -550,6 +551,79 @@ function boxer.paragraph(options)
 	paragraph.children = paragraph.children or {}
 	setmetatable(paragraph.children, childrenMetatable)
 	return paragraph
+end
+
+local Image = {}
+
+function Image:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	love.graphics.draw(self.image, 0, 0, 0, self.scaleX, self.scaleY)
+end
+
+function Image:__index(k)
+	if k == 'image' then
+		return get(self._image)
+	elseif k == 'width' then
+		return self.image:getWidth() * self.scaleX
+	elseif k == 'height' then
+		return self.image:getHeight() * self.scaleY
+	elseif k == 'scaleX' then
+		return get(self._scaleX)
+	elseif k == 'scaleY' then
+		return get(self._scaleY)
+	elseif Image[k] then
+		return Image[k]
+	end
+	return Box.__index(self, k)
+end
+
+function Image:__newindex(k, v)
+	if k == 'image' then
+		self._image = v
+	elseif k == 'width' then
+		self.scaleX = v / self.image:getWidth()
+	elseif k == 'height' then
+		self.scaleY = v / self.image:getHeight()
+	elseif k == 'scaleX' then
+		self._scaleX = v
+	elseif k == 'scaleY' then
+		self._scaleY = v
+	else
+		Box.__newindex(self, k, v)
+	end
+end
+
+function boxer.image(options)
+	-- validate options
+	if not options.image then
+		error('Must provide an image', 2)
+	end
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 2)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 2)
+	end
+	if count(options.width, options.scaleX) > 1 then
+		error('Cannot provide both width and scaleX', 2)
+	end
+	if count(options.height, options.scaleY) > 1 then
+		error('Cannot provide both height and scaleY', 2)
+	end
+	local image = setmetatable({
+		-- initial internal state
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, Image)
+	-- set properties
+	image.image = options.image
+	image.x, image.y = 0, 0
+	image.scaleX, image.scaleY = 1, 1
+	for k, v in pairs(options) do image[k] = v end
+	image.children = image.children or {}
+	setmetatable(image.children, childrenMetatable)
+	return image
 end
 
 return boxer
