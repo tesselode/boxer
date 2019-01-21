@@ -34,6 +34,8 @@ local box = boxer.box {
 		},
 	},
 	clipChildren = true,
+	hidden = function() return love.keyboard.isDown 'space' end,
+	disabled = function() return love.keyboard.isDown 'return' end,
 }
 
 function love.mousemoved(x, y, dx, dy, istouch)

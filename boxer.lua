@@ -273,6 +273,8 @@ function Box:__index(k)
     if k == 'width'            then return get(self._width) end
     if k == 'height'           then return get(self._height) end
     if k == 'clipChildren'     then return get(self._clipChildren) end
+    if k == 'hidden'           then return get(self._hidden) end
+    if k == 'disabled'         then return get(self._disabled) end
     return Box[k]
 end
 
@@ -295,6 +297,10 @@ function Box:__newindex(k, v)
         self._height = v
     elseif k == 'clipChildren' then
         self._clipChildren = v
+    elseif k == 'hidden' then
+        self._hidden = v
+    elseif k == 'disabled' then
+        self._disabled = v
     else
         rawset(self, k, v)
     end
@@ -315,11 +321,13 @@ function boxer.box(options)
     if count(options.y, options.top, options.middle, options.bottom) > 1 then
         error('Cannot provide more than one vertical position property', 2)
     end
-    local box = setmetatable({}, Box)
+    local box = setmetatable({
+        _hoveredPrevious = false,
+        _hovered = false,
+        _pressed = false,
+    }, Box)
     box.x, box.y, box.width, box.height = 0, 0, 0, 0
-    for k, v in pairs(options) do
-        box[k] = v
-    end
+    for k, v in pairs(options) do box[k] = v end
     box.children = box.children or {}
     setmetatable(box.children, childrenMetatable)
     return box
