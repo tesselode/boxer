@@ -72,6 +72,18 @@ function Box:getRect()
 	return self.x, self.y, self.width, self.height
 end
 
+-- gets a style property given the box's state
+-- (idle/pressed/released)
+function Box:getCurrentStyle(property)
+    if not (self.style and self.style.idle) then return nil end
+    if self._pressed and self.style.pressed then
+        return get(self.style.pressed[property])
+    elseif self._hovered and self.style.hovered then
+        return get(self.style.hovered[property])
+    end
+	return get(self.style.idle[property])
+end
+
 function Box:containsPoint(x, y)
 	return x >= self.left
 	   and x <= self.right
@@ -97,6 +109,29 @@ end
 function Box:setY(y, anchorY)
 	anchorY = anchorY or 0
 	self._y, self._anchorY = y, anchorY
+end
+
+function Box:drawSelf()
+    local _, _, width, height = self:getRect()
+	if self:getCurrentStyle 'fillColor' then
+		love.graphics.setColor(self:getCurrentStyle 'fillColor')
+		love.graphics.rectangle('fill', 0, 0, width, height,
+        self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+	end
+    if self:getCurrentStyle 'outlineColor' then
+        love.graphics.setColor(self:getCurrentStyle 'outlineColor')
+        love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
+        love.graphics.rectangle('line', 0, 0, width, height,
+            self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+    end
+end
+
+function Box:draw()
+    if self.hidden then return end
+    love.graphics.push 'all'
+    love.graphics.translate(self:getRect())
+    self:drawSelf()
+    love.graphics.pop()
 end
 
 function Box:__index(k)
