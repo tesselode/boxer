@@ -27,6 +27,7 @@ local boxer = {
 	]]
 }
 
+-- returns the number of arguments that evaluate to true
 local function count(...)
 	local amount = 0
 	for i = 1, select('#', ...) do
@@ -273,18 +274,31 @@ function Box:draw(stencilValue)
 end
 
 function Box:__index(k)
-	if k == 'x' or k == 'left' then return self:getX(0) end
-	if k == 'center'           then return self:getX(.5) end
-	if k == 'right'            then return self:getX(1) end
-	if k == 'y' or k == 'top'  then return self:getY(0) end
-	if k == 'middle'           then return self:getY(.5) end
-	if k == 'bottom'           then return self:getY(1) end
-	if k == 'width'            then return get(self._width) end
-	if k == 'height'           then return get(self._height) end
-	if k == 'clipChildren'     then return get(self._clipChildren) end
-	if k == 'transparent'      then return get(self._transparent) end
-	if k == 'hidden'           then return get(self._hidden) end
-	if k == 'disabled'         then return get(self._disabled) end
+	if k == 'x' or k == 'left' then
+		return self:getX(0)
+	elseif k == 'center' then
+		return self:getX(.5)
+	elseif k == 'right' then
+		return self:getX(1)
+	elseif k == 'y' or k == 'top' then
+		return self:getY(0)
+	elseif k == 'middle' then
+		return self:getY(.5)
+	elseif k == 'bottom' then
+		return self:getY(1)
+	elseif k == 'width' then
+		return get(self._width)
+	elseif k == 'height' then
+		return get(self._height)
+	elseif k == 'clipChildren' then
+		return get(self._clipChildren)
+	elseif k == 'transparent' then
+		return get(self._transparent)
+	elseif k == 'hidden' then
+		return get(self._hidden)
+	elseif k == 'disabled' then
+		return get(self._disabled)
+	end
 	return Box[k]
 end
 
