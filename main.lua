@@ -13,10 +13,25 @@ local box = boxer.box {
 			lineWidth = 8,
 			radiusX = 10,
 			fillColor = {.5, .5, .5},
-		}
-	}
+		},
+	},
+	children = {
+		boxer.box {
+			x = 25,
+			y = 75,
+			width = 200,
+			height = 200,
+			style = {
+				idle = {
+					fillColor = {1, 0, 0},
+				},
+			},
+		},
+	},
+	clipChildren = function()
+		return love.timer.getTime() % 1 > .5
+	end,
 }
-print(box:getRect())
 
 function love.draw()
 	box:draw()

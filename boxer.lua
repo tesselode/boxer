@@ -126,11 +126,43 @@ function Box:drawSelf()
     end
 end
 
-function Box:draw()
+function Box:stencil()
+	local _, _, width, height = self:getRect()
+	love.graphics.rectangle('fill', 0, 0, width, height,
+		self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+end
+
+-- "pushes" a stencil onto the "stack". used for nested stencils
+function Box:_pushStencil(stencilValue)
+	love.graphics.push 'all'
+	love.graphics.stencil(function() self:stencil() end, 'increment', 1, true)
+	love.graphics.setStencilTest('greater', stencilValue)
+end
+
+-- "pops" a stencil from the "stack". used for nested stencils
+function Box:_popStencil()
+	love.graphics.stencil(function() self:stencil() end, 'decrement', 1, true)
+	love.graphics.pop()
+end
+
+-- draws the box and its children
+function Box:draw(stencilValue)
     if self.hidden then return end
+    stencilValue = stencilValue or 0
     love.graphics.push 'all'
     love.graphics.translate(self:getRect())
     self:drawSelf()
+    if self.clipChildren then
+		self:_pushStencil(stencilValue)
+		for _, child in ipairs(self.children) do
+			child:draw(stencilValue + 1)
+		end
+		self:_popStencil()
+	else
+		for _, child in ipairs(self.children) do
+			child:draw(stencilValue)
+		end
+	end
     love.graphics.pop()
 end
 
@@ -143,6 +175,7 @@ function Box:__index(k)
     if k == 'bottom'           then return self:getY(1) end
     if k == 'width'            then return get(self._width) end
     if k == 'height'           then return get(self._height) end
+    if k == 'clipChildren'     then return get(self._clipChildren) end
     return Box[k]
 end
 
@@ -163,10 +196,20 @@ function Box:__newindex(k, v)
         self._width = v
     elseif k == 'height' then
         self._height = v
+    elseif k == 'clipChildren' then
+        self._clipChildren = v
     else
         rawset(self, k, v)
     end
 end
+
+local childrenMetatable = {
+	__index = function(self, k)
+		for _, child in ipairs(self) do
+			if child.name == k then return child end
+		end
+	end,
+}
 
 function boxer.box(options)
     if count(options.x, options.left, options.center, options.right) > 1 then
@@ -180,6 +223,8 @@ function boxer.box(options)
     for k, v in pairs(options) do
         box[k] = v
     end
+    box.children = box.children or {}
+    setmetatable(box.children, childrenMetatable)
     return box
 end
 
