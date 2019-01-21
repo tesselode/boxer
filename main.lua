@@ -7,7 +7,8 @@ local image = boxer.image {
 	style = {
 		idle = {color = {1, 1, 1, .5}},
 		hovered = {color = {1, 1, 1, 1}},
-	}
+	},
+	name = 'bean man',
 }
 
 local box = boxer.wrap {
@@ -28,6 +29,8 @@ box.style = {
 }
 
 box.onPress = function() print 'hello!' end
+
+print(box:getChild 'bean man'.x)
 
 function love.mousemoved(x, y, dx, dy, istouch)
 	box:mousemoved(x, y, dx, dy, istouch)

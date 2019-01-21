@@ -72,6 +72,15 @@ function Box:getRect()
 	return self.x, self.y, self.width, self.height
 end
 
+function Box:getChild(name)
+	for _, child in ipairs(self.children) do
+		if child.name == name then
+			return child
+		end
+	end
+	return false
+end
+
 -- gets a style property given the box's state
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
@@ -309,15 +318,6 @@ function Box:__newindex(k, v)
 	end
 end
 
--- allows children to be accessed by name as well as index
-local childrenMetatable = {
-	__index = function(self, k)
-		for _, child in ipairs(self) do
-			if child.name == k then return child end
-		end
-	end,
-}
-
 function boxer.box(options)
 	-- validate options
 	if count(options.x, options.left, options.center, options.right) > 1 then
@@ -336,7 +336,6 @@ function boxer.box(options)
 	box.x, box.y, box.width, box.height = 0, 0, 0, 0
 	for k, v in pairs(options) do box[k] = v end
 	box.children = box.children or {}
-	setmetatable(box.children, childrenMetatable)
 	return box
 end
 
@@ -473,7 +472,6 @@ function boxer.text(options)
 	text.transparent = true
 	for k, v in pairs(options) do text[k] = v end
 	text.children = text.children or {}
-	setmetatable(text.children, childrenMetatable)
 	return text
 end
 
@@ -549,7 +547,6 @@ function boxer.paragraph(options)
 	paragraph.transparent = true
 	for k, v in pairs(options) do paragraph[k] = v end
 	paragraph.children = paragraph.children or {}
-	setmetatable(paragraph.children, childrenMetatable)
 	return paragraph
 end
 
@@ -622,7 +619,6 @@ function boxer.image(options)
 	image.scaleX, image.scaleY = 1, 1
 	for k, v in pairs(options) do image[k] = v end
 	image.children = image.children or {}
-	setmetatable(image.children, childrenMetatable)
 	return image
 end
 
