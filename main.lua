@@ -1,24 +1,9 @@
 local boxer = require 'boxer'
 
-local box = boxer.box {
-	center = love.graphics.getWidth() / 2,
-	y = 50,
-	width = function() return 100 + 100 * math.sin(love.timer.getTime()) end,
-	height = 100,
-	style = {
-		idle = {
-			outlineColor = function()
-				return 1, 1, 1
-			end,
-			lineWidth = 8,
-			radiusX = 10,
-			fillColor = {.5, .5, .5},
-		},
-	},
-	onPress = function() print 'hello!' end,
+local box = boxer.wrap {
 	children = {
 		boxer.box {
-			x = 25,
+			x = 250,
 			y = 75,
 			width = 200,
 			height = 200,
@@ -33,10 +18,21 @@ local box = boxer.box {
 			onPress = function() print 'hi!' end,
 		},
 	},
-	clipChildren = true,
-	hidden = function() return love.keyboard.isDown 'space' end,
-	disabled = function() return love.keyboard.isDown 'return' end,
+	padding = 50,
 }
+
+box.style = {
+	idle = {
+		outlineColor = function()
+			return 1, 1, 1
+		end,
+		lineWidth = 8,
+		radiusX = 10,
+		fillColor = {.5, .5, .5},
+	},
+}
+
+box.onPress = function() print 'hello!' end
 
 function love.mousemoved(x, y, dx, dy, istouch)
 	box:mousemoved(x, y, dx, dy, istouch)

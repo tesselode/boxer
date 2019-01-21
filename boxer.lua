@@ -333,4 +333,58 @@ function boxer.box(options)
     return box
 end
 
+--[[
+	creates a box around a number of children and adjusts the children's
+	position to be relative to the box.
+]]
+function boxer.wrap(options)
+	if not options then
+		error('Must provide an options table to boxer.wrap()', 2)
+	end
+	if not (options.children and #options.children > 0) then
+		error('Must provide at least one child to wrap', 2)
+	end
+	local padding = options.padding or 0
+	-- get the bounds of the box
+	local left = options.children[1].left
+	local top = options.children[1].top
+	local right = options.children[1].right
+	local bottom = options.children[1].bottom
+	for i = 2, #options.children do
+		local child = options.children[i]
+		left = math.min(left, child.left)
+		top = math.min(top, child.top)
+		right = math.max(right, child.right)
+		bottom = math.max(bottom, child.bottom)
+	end
+	-- add padding
+	left = left - padding
+	top = top - padding
+	right = right + padding
+	bottom = bottom + padding
+	-- adjust child positions
+	for _, child in ipairs(options.children) do
+		if type(child._x) == 'function' then
+			local oldX = child._x
+			child._x = function() return oldX() - left end
+		else
+			child._x = child._x - left
+		end
+		if type(child._y) == 'function' then
+			local oldY = child._y
+			child._y = function() return oldY() - top end
+		else
+			child._y = child._y - top
+		end
+	end
+	-- return the box
+	return boxer.box {
+		left = left,
+		top = top,
+		width = right - left,
+		height = bottom - top,
+		children = options.children,
+	}
+end
+
 return boxer
