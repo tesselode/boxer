@@ -1,14 +1,14 @@
 local boxer = require 'boxer'
 
+local paragraph = boxer.paragraph {
+	font = love.graphics.newFont(16),
+	text = 'Libero repellendus sit consequatur laudantium inventore et. Est omnis qui occaecati maiores dolores asperiores harum. Vel corrupti libero voluptatem. Et fuga omnis dolore quisquam. Quos possimus velit dicta dignissimos et qui. Repudiandae et qui repudiandae in eos blanditiis. Ut ut eaque commodi voluptas aliquid iusto. Reprehenderit distinctio libero aut officia tempora.',
+	width = function() return 400 + 100 * math.sin(love.timer.getTime()) end,
+	height = 50,
+}
+
 local box = boxer.wrap {
-	children = {
-		boxer.text {
-			font = love.graphics.newFont(32),
-			text = 'Hello world!',
-			scaleX = function() return .5 + math.sin(love.timer.getTime()) end,
-			scaleY = 1.5,
-		}
-	},
+	children = {paragraph},
 	padding = 50,
 }
 

@@ -476,4 +476,80 @@ function boxer.text(options)
 	return text
 end
 
+local Paragraph = {}
+
+function Paragraph:drawSelf()
+	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	love.graphics.setFont(self.font)
+	love.graphics.printf(self.text, self.x, self.y, self.width, self.align)
+end
+
+function Paragraph:__index(k)
+	if k == 'font' then
+		return get(self._font)
+	elseif k == 'text' then
+		return get(self._text)
+	elseif k == 'width' then
+		return get(self._width)
+	elseif k == 'height' then
+		local _, lines = self.font:getWrap(self.text, self.width)
+		return #lines * self.font:getHeight() * self.font:getLineHeight()
+	elseif k == 'align' then
+		return get(self._align)
+	elseif Paragraph[k] then
+		return Paragraph[k]
+	end
+	return Box.__index(self, k)
+end
+
+function Paragraph:__newindex(k, v)
+	if k == 'font' then
+		self._font = v
+	elseif k == 'text' then
+		self._text = v
+	elseif k == 'width' then
+		self._width = v
+	elseif k == 'height' then
+		error('Cannot set height of a paragraph directly', 2)
+	elseif k == 'align' then
+		self._align = v
+	else
+		Box.__newindex(self, k, v)
+	end
+end
+
+function boxer.paragraph(options)
+	-- validate options
+	if not options.text then
+		error('Must provide a text string', 2)
+	end
+	if not options.font then
+		error('Must provide a font', 2)
+	end
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 2)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 2)
+	end
+	if options.height then
+		error('Cannot set height of a paragraph directly', 2)
+	end
+	local paragraph = setmetatable({
+		-- initial internal state
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, Paragraph)
+	-- set properties
+	paragraph.text = options.text
+	paragraph.font = options.font
+	paragraph.x, paragraph.y = 0, 0
+	paragraph.transparent = true
+	for k, v in pairs(options) do paragraph[k] = v end
+	paragraph.children = paragraph.children or {}
+	setmetatable(paragraph.children, childrenMetatable)
+	return paragraph
+end
+
 return boxer
