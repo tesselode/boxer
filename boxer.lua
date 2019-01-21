@@ -41,11 +41,11 @@ end
 	necessary and return the raw value.
 ]]
 local function get(value)
-    if type(value) == 'function' then
-        return value()
-    else
-        return value
-    end
+	if type(value) == 'function' then
+		return value()
+	else
+		return value
+	end
 end
 
 local Box = {}
@@ -53,19 +53,19 @@ local Box = {}
 -- gets a position along the x-axis of the box depending on the offset
 -- (0 = left, 0.5 = center, 1 = right, etc.)
 function Box:getX(offset)
-    offset = offset or 0
-    local x = get(self._x)
-    x = x - self.width * self._anchorX
-    return x + self.width * offset
+	offset = offset or 0
+	local x = get(self._x)
+	x = x - self.width * self._anchorX
+	return x + self.width * offset
 end
 
 -- gets a position along the y-axis of the box depending on the offset
 -- (0 = top, 0.5 = middle, 1 = bottom, etc.)
 function Box:getY(offset)
-    offset = offset or 0
-    local y = get(self._y)
-    y = y - self.height * self._anchorY
-    return y + self.height * offset
+	offset = offset or 0
+	local y = get(self._y)
+	y = y - self.height * self._anchorY
+	return y + self.height * offset
 end
 
 function Box:getRect()
@@ -75,12 +75,12 @@ end
 -- gets a style property given the box's state
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
-    if not (self.style and self.style.idle) then return nil end
-    if self._pressed and self.style.pressed then
-        return get(self.style.pressed[property])
-    elseif self._hovered and self.style.hovered then
-        return get(self.style.hovered[property])
-    end
+	if not (self.style and self.style.idle) then return nil end
+	if self._pressed and self.style.pressed then
+		return get(self.style.pressed[property])
+	elseif self._hovered and self.style.hovered then
+		return get(self.style.hovered[property])
+	end
 	return get(self.style.idle[property])
 end
 
@@ -209,18 +209,18 @@ function Box:mousereleased(x, y, button, istouch, presses)
 end
 
 function Box:drawSelf()
-    local _, _, width, height = self:getRect()
+	local _, _, width, height = self:getRect()
 	if self:getCurrentStyle 'fillColor' then
 		love.graphics.setColor(self:getCurrentStyle 'fillColor')
 		love.graphics.rectangle('fill', 0, 0, width, height,
-        self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+		self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 	end
-    if self:getCurrentStyle 'outlineColor' then
-        love.graphics.setColor(self:getCurrentStyle 'outlineColor')
-        love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
-        love.graphics.rectangle('line', 0, 0, width, height,
-            self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
-    end
+	if self:getCurrentStyle 'outlineColor' then
+		love.graphics.setColor(self:getCurrentStyle 'outlineColor')
+		love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
+		love.graphics.rectangle('line', 0, 0, width, height,
+			self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+	end
 end
 
 function Box:stencil()
@@ -244,12 +244,12 @@ end
 
 -- draws the box and its children
 function Box:draw(stencilValue)
-    if self.hidden then return end
-    stencilValue = stencilValue or 0
-    love.graphics.push 'all'
-    love.graphics.translate(self:getRect())
-    self:drawSelf()
-    if self.clipChildren then
+	if self.hidden then return end
+	stencilValue = stencilValue or 0
+	love.graphics.push 'all'
+	love.graphics.translate(self:getRect())
+	self:drawSelf()
+	if self.clipChildren then
 		self:_pushStencil(stencilValue)
 		for _, child in ipairs(self.children) do
 			child:draw(stencilValue + 1)
@@ -260,53 +260,53 @@ function Box:draw(stencilValue)
 			child:draw(stencilValue)
 		end
 	end
-    love.graphics.pop()
+	love.graphics.pop()
 end
 
 function Box:__index(k)
-    if k == 'x' or k == 'left' then return self:getX(0) end
-    if k == 'center'           then return self:getX(.5) end
-    if k == 'right'            then return self:getX(1) end
-    if k == 'y' or k == 'top'  then return self:getY(0) end
-    if k == 'middle'           then return self:getY(.5) end
-    if k == 'bottom'           then return self:getY(1) end
-    if k == 'width'            then return get(self._width) end
-    if k == 'height'           then return get(self._height) end
-    if k == 'clipChildren'     then return get(self._clipChildren) end
-    if k == 'transparent'      then return get(self._transparent) end
-    if k == 'hidden'           then return get(self._hidden) end
-    if k == 'disabled'         then return get(self._disabled) end
-    return Box[k]
+	if k == 'x' or k == 'left' then return self:getX(0) end
+	if k == 'center'           then return self:getX(.5) end
+	if k == 'right'            then return self:getX(1) end
+	if k == 'y' or k == 'top'  then return self:getY(0) end
+	if k == 'middle'           then return self:getY(.5) end
+	if k == 'bottom'           then return self:getY(1) end
+	if k == 'width'            then return get(self._width) end
+	if k == 'height'           then return get(self._height) end
+	if k == 'clipChildren'     then return get(self._clipChildren) end
+	if k == 'transparent'      then return get(self._transparent) end
+	if k == 'hidden'           then return get(self._hidden) end
+	if k == 'disabled'         then return get(self._disabled) end
+	return Box[k]
 end
 
 function Box:__newindex(k, v)
-    if k == 'x' or k == 'left' then
-        self:setX(v, 0)
-    elseif k == 'center' then
-        self:setX(v, .5)
-    elseif k == 'right' then
-        self:setX(v, 1)
-    elseif k == 'y' or k == 'top' then
-        self:setY(v, 0)
-    elseif k == 'middle' then
-        self:setY(v, .5)
-    elseif k == 'bottom' then
-        self:setY(v, 1)
-    elseif k == 'width' then
-        self._width = v
-    elseif k == 'height' then
-        self._height = v
-    elseif k == 'clipChildren' then
-        self._clipChildren = v
-    elseif k == 'transparent' then
-        self._transparent = v
-    elseif k == 'hidden' then
-        self._hidden = v
-    elseif k == 'disabled' then
-        self._disabled = v
-    else
-        rawset(self, k, v)
-    end
+	if k == 'x' or k == 'left' then
+		self:setX(v, 0)
+	elseif k == 'center' then
+		self:setX(v, .5)
+	elseif k == 'right' then
+		self:setX(v, 1)
+	elseif k == 'y' or k == 'top' then
+		self:setY(v, 0)
+	elseif k == 'middle' then
+		self:setY(v, .5)
+	elseif k == 'bottom' then
+		self:setY(v, 1)
+	elseif k == 'width' then
+		self._width = v
+	elseif k == 'height' then
+		self._height = v
+	elseif k == 'clipChildren' then
+		self._clipChildren = v
+	elseif k == 'transparent' then
+		self._transparent = v
+	elseif k == 'hidden' then
+		self._hidden = v
+	elseif k == 'disabled' then
+		self._disabled = v
+	else
+		rawset(self, k, v)
+	end
 end
 
 -- allows children to be accessed by name as well as index
@@ -319,25 +319,25 @@ local childrenMetatable = {
 }
 
 function boxer.box(options)
-    -- validate options
-    if count(options.x, options.left, options.center, options.right) > 1 then
-        error('Cannot provide more than one horizontal position property', 2)
-    end
-    if count(options.y, options.top, options.middle, options.bottom) > 1 then
-        error('Cannot provide more than one vertical position property', 2)
-    end
-    local box = setmetatable({
-        -- initial internal state
-        _hoveredPrevious = false,
-        _hovered = false,
-        _pressed = false,
-    }, Box)
-    -- set properties
-    box.x, box.y, box.width, box.height = 0, 0, 0, 0
-    for k, v in pairs(options) do box[k] = v end
-    box.children = box.children or {}
-    setmetatable(box.children, childrenMetatable)
-    return box
+	-- validate options
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 2)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 2)
+	end
+	local box = setmetatable({
+		-- initial internal state
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, Box)
+	-- set properties
+	box.x, box.y, box.width, box.height = 0, 0, 0, 0
+	for k, v in pairs(options) do box[k] = v end
+	box.children = box.children or {}
+	setmetatable(box.children, childrenMetatable)
+	return box
 end
 
 --[[
