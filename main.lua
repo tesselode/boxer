@@ -16,6 +16,7 @@ local box = boxer.wrap {
 				}
 			},
 			onPress = function() print 'hi!' end,
+			transparent = function() return love.keyboard.isDown 'space' end,
 		},
 	},
 	padding = 50,
