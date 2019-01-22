@@ -410,7 +410,12 @@ end
 local Text = {}
 
 function Text:drawSelf()
-	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	local r, g, b, a = self:getCurrentStyle 'color'
+	if r then
+		love.graphics.setColor(r, g, b, a)
+	else
+		love.graphics.setColor(1, 1, 1)
+	end
 	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, 0, 0, 0, self.scaleX, self.scaleY)
 end
@@ -492,7 +497,12 @@ end
 local Paragraph = {}
 
 function Paragraph:drawSelf()
-	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	local r, g, b, a = self:getCurrentStyle 'color'
+	if r then
+		love.graphics.setColor(r, g, b, a)
+	else
+		love.graphics.setColor(1, 1, 1)
+	end
 	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, 0, 0, self.width, self.align)
 end
@@ -567,7 +577,12 @@ end
 local Image = {}
 
 function Image:drawSelf()
-	love.graphics.setColor(self:getCurrentStyle 'color' or {1, 1, 1})
+	local r, g, b, a = self:getCurrentStyle 'color'
+	if r then
+		love.graphics.setColor(r, g, b, a)
+	else
+		love.graphics.setColor(1, 1, 1)
+	end
 	love.graphics.draw(self.image, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
