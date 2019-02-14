@@ -49,6 +49,47 @@ local function get(value)
 	end
 end
 
+local function validatePositionOptions(options)
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
+	end
+end
+
+local function createInstance(class)
+	return setmetatable({
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, class)
+end
+
+local function setCommonOptions(box, options)
+	box.x, box.y = 0, 0
+	if options.x then box.x = options.x end
+	if options.left then box.left = options.left end
+	if options.center then box.center = options.center end
+	if options.right then box.right = options.right end
+	if options.y then box.y = options.y end
+	if options.top then box.top = options.top end
+	if options.middle then box.middle = options.middle end
+	if options.bottom then box.bottom = options.bottom end
+	box.style = options.style
+	box.children = options.children or {}
+	box.clipChildren = options.clipChildren
+	box.transparent = options.transparent
+	box.hidden = options.hidden
+	box.disabled = options.disabled
+	box.onMove = options.onMove
+	box.onDrag = options.onDrag
+	box.onEnter = options.onEnter
+	box.onLeave = options.onLeave
+	box.onClick = options.onClick
+	box.onPress = options.onPress
+end
+
 local Box = {}
 
 -- gets a position along the x-axis of the box depending on the offset
@@ -333,23 +374,11 @@ function Box:__newindex(k, v)
 end
 
 function boxer.box(options)
-	-- validate options
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 2)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 2)
-	end
-	local box = setmetatable({
-		-- initial internal state
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, Box)
-	-- set properties
-	box.x, box.y, box.width, box.height = 0, 0, 0, 0
-	for k, v in pairs(options) do box[k] = v end
-	box.children = box.children or {}
+	validatePositionOptions(options)
+	local box = createInstance(Box)
+	box.width = options.width or 0
+	box.height = options.height or 0
+	setCommonOptions(box, options)
 	return box
 end
 
@@ -465,32 +494,24 @@ function boxer.text(options)
 	if not options.font then
 		error('Must provide a font', 2)
 	end
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 2)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 2)
-	end
 	if count(options.width, options.scaleX) > 1 then
 		error('Cannot provide both width and scaleX', 2)
 	end
 	if count(options.height, options.scaleY) > 1 then
 		error('Cannot provide both height and scaleY', 2)
 	end
-	local text = setmetatable({
-		-- initial internal state
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, Text)
-	-- set properties
+	validatePositionOptions(options)
+
+	local text = createInstance(Text)
 	text.text = options.text
 	text.font = options.font
-	text.x, text.y = 0, 0
 	text.scaleX, text.scaleY = 1, 1
-	text.transparent = true
-	for k, v in pairs(options) do text[k] = v end
-	text.children = text.children or {}
+	if options.scaleX then text.scaleX = options.scaleX end
+	if options.scaleY then text.scaleY = options.scaleY end
+	if options.width then text.width = options.width end
+	if options.height then text.height = options.height end
+	setCommonOptions(text, options)
+	if options.transparent == nil then text.transparent = true end
 	return text
 end
 
@@ -549,28 +570,20 @@ function boxer.paragraph(options)
 	if not options.font then
 		error('Must provide a font', 2)
 	end
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 2)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 2)
+	if not options.width then
+		error('Must provide a width', 2)
 	end
 	if options.height then
 		error('Cannot set height of a paragraph directly', 2)
 	end
-	local paragraph = setmetatable({
-		-- initial internal state
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, Paragraph)
-	-- set properties
+	validatePositionOptions(options)
+
+	local paragraph = createInstance(Paragraph)
 	paragraph.text = options.text
 	paragraph.font = options.font
-	paragraph.x, paragraph.y = 0, 0
-	paragraph.transparent = true
-	for k, v in pairs(options) do paragraph[k] = v end
-	paragraph.children = paragraph.children or {}
+	paragraph.width = options.width
+	setCommonOptions(paragraph, options)
+	if options.transparent == nil then paragraph.transparent = true end
 	return paragraph
 end
 
@@ -624,30 +637,22 @@ function boxer.image(options)
 	if not options.image then
 		error('Must provide an image', 2)
 	end
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 2)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 2)
-	end
 	if count(options.width, options.scaleX) > 1 then
 		error('Cannot provide both width and scaleX', 2)
 	end
 	if count(options.height, options.scaleY) > 1 then
 		error('Cannot provide both height and scaleY', 2)
 	end
-	local image = setmetatable({
-		-- initial internal state
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, Image)
-	-- set properties
+	validatePositionOptions(options)
+
+	local image = createInstance(Image)
 	image.image = options.image
-	image.x, image.y = 0, 0
 	image.scaleX, image.scaleY = 1, 1
-	for k, v in pairs(options) do image[k] = v end
-	image.children = image.children or {}
+	if options.scaleX then image.scaleX = options.scaleX end
+	if options.scaleY then image.scaleY = options.scaleY end
+	if options.width then image.width = options.width end
+	if options.height then image.height = options.height end
+	setCommonOptions(image, options)
 	return image
 end
 
@@ -695,23 +700,11 @@ function Ellipse:__newindex(k, v)
 end
 
 function boxer.ellipse(options)
-	-- validate options
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 2)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 2)
-	end
-	local ellipse = setmetatable({
-		-- initial internal state
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, Ellipse)
-	-- set properties
-	ellipse.x, ellipse.y, ellipse.width, ellipse.height = 0, 0, 0, 0
-	for k, v in pairs(options) do ellipse[k] = v end
-	ellipse.children = ellipse.children or {}
+	validatePositionOptions(options)
+	local ellipse = createInstance(Ellipse)
+	ellipse.width = options.width or 0
+	ellipse.height = options.height or 0
+	setCommonOptions(ellipse, options)
 	return ellipse
 end
 

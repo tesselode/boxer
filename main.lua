@@ -17,6 +17,14 @@ local ellipse = boxer.ellipse {
 	},
 }
 
+local image = boxer.image {
+	image = love.graphics.newImage 'bean man.jpg',
+	center = love.graphics.getWidth() / 2,
+	middle = love.graphics.getHeight() / 2,
+	scaleX = .25,
+	height = 100,
+}
+
 function love.mousemoved(...)
 	ellipse:mousemoved(...)
 end
@@ -31,4 +39,5 @@ end
 
 function love.draw()
 	ellipse:draw()
+	image:draw()
 end
