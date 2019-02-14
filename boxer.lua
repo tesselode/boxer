@@ -86,9 +86,9 @@ end
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
 	if not (self.style and self.style.idle) then return nil end
-	if self._pressed and self.style.pressed then
+	if self._pressed and self.style.pressed and self.style.pressed[property] then
 		return get(self.style.pressed[property])
-	elseif self._hovered and self.style.hovered then
+	elseif self._hovered and self.style.hovered and self.style.hovered[property] then
 		return get(self.style.hovered[property])
 	end
 	return get(self.style.idle[property])
