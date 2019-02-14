@@ -1,49 +1,34 @@
 local boxer = require 'boxer'
 
-local image = boxer.image {
-	image = love.graphics.newImage 'bean man.jpg',
-	scaleX = .25,
-	scaleY = .25,
+local ellipse = boxer.ellipse {
+	right = love.graphics.getWidth(),
+	bottom = love.graphics.getHeight(),
+	width = 400,
+	height = 200,
 	style = {
-		idle = {color = {1, 1, 1, .5}},
-		hovered = {color = {1, 1, 1, 1}},
-	},
-	name = 'bean man',
-}
-
-local box = boxer.wrap {
-	children = {image},
-	padding = 25,
-}
-
-box.x, box.y = 50, 50
-box.style = {
-	idle = {
-		outlineColor = function()
-			return 1, 1, 1
-		end,
-		lineWidth = 8,
-		radiusX = 10,
-		fillColor = {.5, .5, .5},
+		idle = {
+			fillColor = {.25, .25, .25},
+			outlineColor = {1, 1, 1},
+			lineWidth = 4,
+		},
+		hovered = {
+			fillColor = {.5, .5, .5},
+		},
 	},
 }
 
-box.onPress = function() print 'hello!' end
-
-print(box:getChild 'bean man'.x)
-
-function love.mousemoved(x, y, dx, dy, istouch)
-	box:mousemoved(x, y, dx, dy, istouch)
+function love.mousemoved(...)
+	ellipse:mousemoved(...)
 end
 
-function love.mousepressed(x, y, button, istouch, presses)
-	box:mousepressed(x, y, button, istouch, presses)
+function love.mousepressed(...)
+	ellipse:mousepressed(...)
 end
 
-function love.mousereleased(x, y, button, istouch, presses)
-	box:mousereleased(x, y, button, istouch, presses)
+function love.mousereleased(...)
+	ellipse:mousereleased(...)
 end
 
 function love.draw()
-	box:draw()
+	ellipse:draw()
 end

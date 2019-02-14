@@ -651,4 +651,68 @@ function boxer.image(options)
 	return image
 end
 
+local Ellipse = {}
+
+function Ellipse:containsPoint(x, y)
+	local rx, ry = self.width/2, self.height/2
+	return ((x - self.center) ^ 2) / (rx ^ 2) + ((y - self.middle) ^ 2) / (ry ^ 2) <= 1
+end
+
+function Ellipse:drawSelf()
+	if self:getCurrentStyle 'fillColor' then
+		love.graphics.setColor(self:getCurrentStyle 'fillColor')
+		love.graphics.ellipse('fill', self.width/2, self.height/2,
+			self.width/2, self.height/2, self.segments)
+	end
+	if self:getCurrentStyle 'outlineColor' then
+		love.graphics.setColor(self:getCurrentStyle 'outlineColor')
+		love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
+		love.graphics.ellipse('line', self.width/2, self.height/2,
+			self.width/2, self.height/2, self.segments)
+	end
+end
+
+function Ellipse:stencil()
+	love.graphics.ellipse('fill', self.width/2, self.height/2,
+		self.width/2, self.height/2, self.segments)
+end
+
+function Ellipse:__index(k)
+	if k == 'segments' then
+		return get(self._segments)
+	elseif Ellipse[k] then
+		return Ellipse[k]
+	end
+	return Box.__index(self, k)
+end
+
+function Ellipse:__newindex(k, v)
+	if k == 'segments' then
+		self._segments = v
+	else
+		Box.__newindex(self, k, v)
+	end
+end
+
+function boxer.ellipse(options)
+	-- validate options
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 2)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 2)
+	end
+	local ellipse = setmetatable({
+		-- initial internal state
+		_hoveredPrevious = false,
+		_hovered = false,
+		_pressed = false,
+	}, Ellipse)
+	-- set properties
+	ellipse.x, ellipse.y, ellipse.width, ellipse.height = 0, 0, 0, 0
+	for k, v in pairs(options) do ellipse[k] = v end
+	ellipse.children = ellipse.children or {}
+	return ellipse
+end
+
 return boxer
