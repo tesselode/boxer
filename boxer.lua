@@ -49,6 +49,8 @@ local function get(value)
 	end
 end
 
+-- makes sure that an options table doesn't have more than one horizontal
+-- or vertical position property
 local function validatePositionOptions(options)
 	if count(options.x, options.left, options.center, options.right) > 1 then
 		error('Cannot provide more than one horizontal position property', 3)
@@ -58,6 +60,8 @@ local function validatePositionOptions(options)
 	end
 end
 
+-- creates an instance of a class with some initial state common
+-- to every boxer class
 local function createInstance(class)
 	return setmetatable({
 		_hoveredPrevious = false,
@@ -66,6 +70,8 @@ local function createInstance(class)
 	}, class)
 end
 
+-- given an options table, sets properties (and defaults) of a box
+-- that are common to every boxer class
 local function setCommonOptions(box, options)
 	box.x, box.y = 0, 0
 	if options.x then box.x = options.x end
@@ -114,6 +120,7 @@ function Box:getRect()
 	return self.x, self.y, self.width, self.height
 end
 
+-- gets a child by name
 function Box:getChild(name)
 	for _, child in ipairs(self.children) do
 		if child.name == name then
@@ -163,7 +170,7 @@ function Box:setY(y, anchorY)
 end
 
 --[[
-	tells the box about mouse movement. corresponds to love.mousemoved
+	tells the box about mouse movement. corresponds to love.mousemoved.
 	mousemoved events will also be passed to child boxes, and child boxes will
 	block other child boxes behind them (unless they're transparent)
 ]]
@@ -219,7 +226,7 @@ function Box:_mouseoff()
 end
 
 --[[
-	tells a box that a mouse button was pressed. corresponds to love.mousepressed
+	tells a box that a mouse button was pressed. corresponds to love.mousepressed.
 	also tells child boxes about mouse presses
 ]]
 function Box:mousepressed(x, y, button, istouch, presses)
@@ -241,7 +248,7 @@ function Box:mousepressed(x, y, button, istouch, presses)
 end
 
 --[[
-	tells a box that a mouse button was released. corresponds to love.mousereleased
+	tells a box that a mouse button was released. corresponds to love.mousereleased.
 	also tells child boxes about mouse releases
 ]]
 function Box:mousereleased(x, y, button, istouch, presses)
@@ -259,6 +266,11 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	end
 end
 
+--[[
+	draws a box with appropriate styling. can be overridden for custom visuals.
+	note that drawSelf should be written as if the top-left corner of the box
+	is always at 0, 0 (box.draw applies a translation based on the box's position)
+]]
 function Box:drawSelf()
 	local _, _, width, height = self:getRect()
 	if self:getCurrentStyle 'fillColor' then
@@ -274,6 +286,12 @@ function Box:drawSelf()
 	end
 end
 
+--[[
+	draws the stencil for a box. used for clipping children.
+	can be overridden to match a custom drawSelf function.
+	note that stencil should be written as if the top-left corner of the box
+	is always at 0, 0 (box.draw applies a translation based on the box's position)
+]]
 function Box:stencil()
 	local _, _, width, height = self:getRect()
 	love.graphics.rectangle('fill', 0, 0, width, height,
