@@ -1,6 +1,6 @@
 local boxer = require 'boxer'
 
-local ellipse = boxer.ellipse {
+local ellipse = boxer.Ellipse {
 	right = love.graphics.getWidth(),
 	bottom = love.graphics.getHeight(),
 	width = 400,
@@ -17,7 +17,7 @@ local ellipse = boxer.ellipse {
 	},
 }
 
-local image = boxer.image {
+local image = boxer.Image {
 	image = love.graphics.newImage 'bean man.jpg',
 	center = love.graphics.getWidth() / 2,
 	middle = love.graphics.getHeight() / 2,

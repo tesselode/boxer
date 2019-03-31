@@ -49,6 +49,48 @@ local function get(value)
 	end
 end
 
+-- creates a boxer class
+local function createClass(parent)
+	local class = {}
+
+	function class.extend() return createClass(class) end
+
+	function class:__index(k)
+		if class.properties[k] then
+			if class.properties[k].get then
+				return class.properties[k].get(self)
+			end
+			return get(self['_' .. k])
+		end
+		if class[k] then return class[k] end
+		if parent then return parent.__index(self, k) end
+	end
+
+	function class:__newindex(k, v)
+		if class.properties[k] then
+			if class.properties[k].set then
+				class.properties[k].set(self, v)
+			else
+				self['_' .. k] = v
+			end
+		elseif parent then
+			parent.__newindex(self, k, v)
+		else
+			rawset(self, k, v)
+		end
+	end
+
+	setmetatable(class, {
+		__call = function(self, ...)
+			local instance = setmetatable({}, class)
+			if instance.init then instance:init(...) end
+			return instance
+		end,
+	})
+
+	return class
+end
+
 -- makes sure that an options table doesn't have more than one horizontal
 -- or vertical position property
 local function validatePositionOptions(options)
@@ -58,16 +100,6 @@ local function validatePositionOptions(options)
 	if count(options.y, options.top, options.middle, options.bottom) > 1 then
 		error('Cannot provide more than one vertical position property', 3)
 	end
-end
-
--- creates an instance of a class with some initial state common
--- to every boxer class
-local function createInstance(class)
-	return setmetatable({
-		_hoveredPrevious = false,
-		_hovered = false,
-		_pressed = false,
-	}, class)
 end
 
 -- given an options table, sets properties (and defaults) of a box
@@ -96,48 +128,59 @@ local function setCommonOptions(box, options)
 	box.onPress = options.onPress
 end
 
-local Box = {
-	properties = {
-		x = {
-			get = function(self) return self:getX(0) end,
-			set = function(self, v) self:setX(v, 0) end,
-		},
-		left = {
-			get = function(self) return self:getX(0) end,
-			set = function(self, v) self:setX(v, 0) end,
-		},
-		center = {
-			get = function(self) return self:getX(.5) end,
-			set = function(self, v) self:setX(v, .5) end,
-		},
-		right = {
-			get = function(self) return self:getX(1) end,
-			set = function(self, v) self:setX(v, 1) end,
-		},
-		y = {
-			get = function(self) return self:getY(0) end,
-			set = function(self, v) self:setY(v, 0) end,
-		},
-		top = {
-			get = function(self) return self:getY(0) end,
-			set = function(self, v) self:setY(v, 0) end,
-		},
-		middle = {
-			get = function(self) return self:getY(.5) end,
-			set = function(self, v) self:setY(v, .5) end,
-		},
-		bottom = {
-			get = function(self) return self:getY(1) end,
-			set = function(self, v) self:setY(v, 1) end,
-		},
-		width = {},
-		height = {},
-		clipChildren = {},
-		transparent = {},
-		hidden = {},
-		disabled = {},
-	}
+local Box = createClass()
+
+Box.properties = {
+	x = {
+		get = function(self) return self:getX(0) end,
+		set = function(self, v) self:setX(v, 0) end,
+	},
+	left = {
+		get = function(self) return self:getX(0) end,
+		set = function(self, v) self:setX(v, 0) end,
+	},
+	center = {
+		get = function(self) return self:getX(.5) end,
+		set = function(self, v) self:setX(v, .5) end,
+	},
+	right = {
+		get = function(self) return self:getX(1) end,
+		set = function(self, v) self:setX(v, 1) end,
+	},
+	y = {
+		get = function(self) return self:getY(0) end,
+		set = function(self, v) self:setY(v, 0) end,
+	},
+	top = {
+		get = function(self) return self:getY(0) end,
+		set = function(self, v) self:setY(v, 0) end,
+	},
+	middle = {
+		get = function(self) return self:getY(.5) end,
+		set = function(self, v) self:setY(v, .5) end,
+	},
+	bottom = {
+		get = function(self) return self:getY(1) end,
+		set = function(self, v) self:setY(v, 1) end,
+	},
+	width = {},
+	height = {},
+	clipChildren = {},
+	transparent = {},
+	hidden = {},
+	disabled = {},
 }
+
+function Box:init(options)
+	validatePositionOptions(options)
+	
+	self._hoveredPrevious = false
+	self._hovered = false
+	self._pressed = false
+	self.width = options.width or 0
+	self.height = options.height or 0
+	setCommonOptions(self, options)
+end
 
 -- gets a position along the x-axis of the box depending on the offset
 -- (0 = left, 0.5 = center, 1 = right, etc.)
@@ -373,36 +416,7 @@ function Box:draw(stencilValue)
 	love.graphics.pop()
 end
 
-function Box:__index(k)
-	if Box.properties[k] then
-		if Box.properties[k].get then
-			return Box.properties[k].get(self)
-		end
-		return get(self['_' .. k])
-	end
-	return Box[k]
-end
-
-function Box:__newindex(k, v)
-	if Box.properties[k] then
-		if Box.properties[k].set then
-			Box.properties[k].set(self, v)
-		else
-			self['_' .. k] = v
-		end
-	else
-		rawset(self, k, v)
-	end
-end
-
-function boxer.box(options)
-	validatePositionOptions(options)
-	local box = createInstance(Box)
-	box.width = options.width or 0
-	box.height = options.height or 0
-	setCommonOptions(box, options)
-	return box
-end
+boxer.Box = Box
 
 --[[
 	creates a box around a number of children and adjusts the children's
@@ -458,7 +472,30 @@ function boxer.wrap(options)
 	}
 end
 
-local Text = {}
+local Text = Box.extend()
+
+Text.properties = {
+	font = {},
+	text = {},
+	width = {
+		get = function(self)
+			return self.font:getWidth(self.text) * self.scaleX
+		end,
+		set = function(self, v)
+			self.scaleX = v / self.font:getWidth(self.text)
+		end,
+	},
+	height = {
+		get = function(self)
+			return self.font:getHeight() * self.scaleY
+		end,
+		set = function(self, v)
+			self.scaleY = v / self.font:getHeight()
+		end,
+	},
+	scaleX = {},
+	scaleY = {},
+}
 
 function Text:drawSelf()
 	local r, g, b, a = self:getCurrentStyle 'color'
@@ -471,44 +508,7 @@ function Text:drawSelf()
 	love.graphics.print(self.text, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
-function Text:__index(k)
-	if k == 'font' then
-		return get(self._font)
-	elseif k == 'text' then
-		return get(self._text)
-	elseif k == 'width' then
-		return self.font:getWidth(self.text) * self.scaleX
-	elseif k == 'height' then
-		return self.font:getHeight() * self.scaleY
-	elseif k == 'scaleX' then
-		return get(self._scaleX)
-	elseif k == 'scaleY' then
-		return get(self._scaleY)
-	elseif Text[k] then
-		return Text[k]
-	end
-	return Box.__index(self, k)
-end
-
-function Text:__newindex(k, v)
-	if k == 'font' then
-		self._font = v
-	elseif k == 'text' then
-		self._text = v
-	elseif k == 'width' then
-		self.scaleX = v / self.font:getWidth(self.text)
-	elseif k == 'height' then
-		self.scaleY = v / self.font:getHeight()
-	elseif k == 'scaleX' then
-		self._scaleX = v
-	elseif k == 'scaleY' then
-		self._scaleY = v
-	else
-		Box.__newindex(self, k, v)
-	end
-end
-
-function boxer.text(options)
+function Text:init(options)
 	-- validate options
 	if not options.text then
 		error('Must provide a text string', 2)
@@ -524,20 +524,36 @@ function boxer.text(options)
 	end
 	validatePositionOptions(options)
 
-	local text = createInstance(Text)
-	text.text = options.text
-	text.font = options.font
-	text.scaleX, text.scaleY = 1, 1
-	if options.scaleX then text.scaleX = options.scaleX end
-	if options.scaleY then text.scaleY = options.scaleY end
-	if options.width then text.width = options.width end
-	if options.height then text.height = options.height end
-	setCommonOptions(text, options)
-	if options.transparent == nil then text.transparent = true end
-	return text
+	self.text = options.text
+	self.font = options.font
+	self.scaleX, self.scaleY = 1, 1
+	if options.scaleX then self.scaleX = options.scaleX end
+	if options.scaleY then self.scaleY = options.scaleY end
+	if options.width then self.width = options.width end
+	if options.height then self.height = options.height end
+	setCommonOptions(self, options)
+	if options.transparent == nil then self.transparent = true end
 end
 
-local Paragraph = {}
+boxer.Text = Text
+
+local Paragraph = Box.extend()
+
+Paragraph.properties = {
+	font = {},
+	text = {},
+	width = {},
+	height = {
+		get = function(self)
+			local _, lines = self.font:getWrap(self.text, self.width)
+			return #lines * self.font:getHeight() * self.font:getLineHeight()
+		end,
+		set = function(self, v)
+			error('Cannot set height of a paragraph directly', 2)
+		end,
+	},
+	align = {},
+}
 
 function Paragraph:drawSelf()
 	local r, g, b, a = self:getCurrentStyle 'color'
@@ -550,41 +566,7 @@ function Paragraph:drawSelf()
 	love.graphics.printf(self.text, 0, 0, self.width, self.align)
 end
 
-function Paragraph:__index(k)
-	if k == 'font' then
-		return get(self._font)
-	elseif k == 'text' then
-		return get(self._text)
-	elseif k == 'width' then
-		return get(self._width)
-	elseif k == 'height' then
-		local _, lines = self.font:getWrap(self.text, self.width)
-		return #lines * self.font:getHeight() * self.font:getLineHeight()
-	elseif k == 'align' then
-		return get(self._align)
-	elseif Paragraph[k] then
-		return Paragraph[k]
-	end
-	return Box.__index(self, k)
-end
-
-function Paragraph:__newindex(k, v)
-	if k == 'font' then
-		self._font = v
-	elseif k == 'text' then
-		self._text = v
-	elseif k == 'width' then
-		self._width = v
-	elseif k == 'height' then
-		error('Cannot set height of a paragraph directly', 2)
-	elseif k == 'align' then
-		self._align = v
-	else
-		Box.__newindex(self, k, v)
-	end
-end
-
-function boxer.paragraph(options)
+function Paragraph:init(options)
 	-- validate options
 	if not options.text then
 		error('Must provide a text string', 2)
@@ -600,16 +582,38 @@ function boxer.paragraph(options)
 	end
 	validatePositionOptions(options)
 
-	local paragraph = createInstance(Paragraph)
-	paragraph.text = options.text
-	paragraph.font = options.font
-	paragraph.width = options.width
-	setCommonOptions(paragraph, options)
-	if options.transparent == nil then paragraph.transparent = true end
-	return paragraph
+	self.text = options.text
+	self.font = options.font
+	self.width = options.width
+	setCommonOptions(self, options)
+	if options.transparent == nil then self.transparent = true end
 end
 
-local Image = {}
+boxer.Paragraph = Paragraph
+
+local Image = Box.extend()
+
+Image.properties = {
+	image = {},
+	width = {
+		get = function(self)
+			return self.image:getWidth() * self.scaleX
+		end,
+		set = function(self, v)
+			self.scaleX = v / self.image:getWidth()
+		end,
+	},
+	height = {
+		get = function(self)
+			return self.image:getHeight() * self.scaleY
+		end,
+		set = function(self, v)
+			self.scaleY = v / self.image:getHeight()
+		end,
+	},
+	scaleX = {},
+	scaleY = {},
+}
 
 function Image:drawSelf()
 	local r, g, b, a = self:getCurrentStyle 'color'
@@ -621,40 +625,7 @@ function Image:drawSelf()
 	love.graphics.draw(self.image, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
-function Image:__index(k)
-	if k == 'image' then
-		return get(self._image)
-	elseif k == 'width' then
-		return self.image:getWidth() * self.scaleX
-	elseif k == 'height' then
-		return self.image:getHeight() * self.scaleY
-	elseif k == 'scaleX' then
-		return get(self._scaleX)
-	elseif k == 'scaleY' then
-		return get(self._scaleY)
-	elseif Image[k] then
-		return Image[k]
-	end
-	return Box.__index(self, k)
-end
-
-function Image:__newindex(k, v)
-	if k == 'image' then
-		self._image = v
-	elseif k == 'width' then
-		self.scaleX = v / self.image:getWidth()
-	elseif k == 'height' then
-		self.scaleY = v / self.image:getHeight()
-	elseif k == 'scaleX' then
-		self._scaleX = v
-	elseif k == 'scaleY' then
-		self._scaleY = v
-	else
-		Box.__newindex(self, k, v)
-	end
-end
-
-function boxer.image(options)
+function Image:init(options)
 	-- validate options
 	if not options.image then
 		error('Must provide an image', 2)
@@ -667,18 +638,22 @@ function boxer.image(options)
 	end
 	validatePositionOptions(options)
 
-	local image = createInstance(Image)
-	image.image = options.image
-	image.scaleX, image.scaleY = 1, 1
-	if options.scaleX then image.scaleX = options.scaleX end
-	if options.scaleY then image.scaleY = options.scaleY end
-	if options.width then image.width = options.width end
-	if options.height then image.height = options.height end
-	setCommonOptions(image, options)
-	return image
+	self.image = options.image
+	self.scaleX, self.scaleY = 1, 1
+	if options.scaleX then self.scaleX = options.scaleX end
+	if options.scaleY then self.scaleY = options.scaleY end
+	if options.width then self.width = options.width end
+	if options.height then self.height = options.height end
+	setCommonOptions(self, options)
 end
 
-local Ellipse = {}
+boxer.Image = Image
+
+local Ellipse = Box.extend()
+
+Ellipse.properties = {
+	segments = {},
+}
 
 function Ellipse:containsPoint(x, y)
 	local rx, ry = self.width/2, self.height/2
@@ -704,30 +679,14 @@ function Ellipse:stencil()
 		self.width/2, self.height/2, self.segments)
 end
 
-function Ellipse:__index(k)
-	if k == 'segments' then
-		return get(self._segments)
-	elseif Ellipse[k] then
-		return Ellipse[k]
-	end
-	return Box.__index(self, k)
-end
-
-function Ellipse:__newindex(k, v)
-	if k == 'segments' then
-		self._segments = v
-	else
-		Box.__newindex(self, k, v)
-	end
-end
-
-function boxer.ellipse(options)
+function Ellipse:init(options)
 	validatePositionOptions(options)
-	local ellipse = createInstance(Ellipse)
-	ellipse.width = options.width or 0
-	ellipse.height = options.height or 0
-	setCommonOptions(ellipse, options)
-	return ellipse
+
+	self.width = options.width or 0
+	self.height = options.height or 0
+	setCommonOptions(self, options)
 end
+
+boxer.Ellipse = Ellipse
 
 return boxer
