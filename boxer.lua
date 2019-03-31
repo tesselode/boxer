@@ -282,16 +282,16 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 	self._hoveredPrevious = self._hovered
 	self._hovered = self:containsPoint(x, y)
 	if self.onMove and self._hovered then
-		self.onMove(x - self.x, y - self.y, dx, dy)
+		self:onMove(x - self.x, y - self.y, dx, dy)
 	end
 	if self.onDrag and self._pressed then
-		self.onDrag(self._pressed, dx, dy)
+		self:onDrag(self._pressed, dx, dy)
 	end
 	if self._hovered and not self._hoveredPrevious and self.onEnter then
-		self.onEnter()
+		self:onEnter()
 	end
 	if not self._hovered and self._hoveredPrevious and self.onLeave then
-		self.onLeave()
+		self:onLeave()
 	end
 end
 
@@ -305,7 +305,7 @@ function Box:_mouseoff()
 	self._hoveredPrevious = self._hovered
 	self._hovered = false
 	if not self._hovered and self._hoveredPrevious and self.onLeave then
-		self.onLeave()
+		self:onLeave()
 	end
 end
 
@@ -327,7 +327,7 @@ function Box:mousepressed(x, y, button, istouch, presses)
 	end
 	if not self._pressed and self:containsPoint(x, y) then
 		self._pressed = button
-		if self.onClick then self.onClick(button) end
+		if self.onClick then self:onClick(button) end
 	end
 end
 
@@ -342,7 +342,7 @@ function Box:mousereleased(x, y, button, istouch, presses)
 	if button == self._pressed then
 		self._pressed = false
 		if self.onPress and self._hovered then
-			self.onPress(button)
+			self:onPress(button)
 		end
 	end
 	for _, child in ipairs(self.children) do
