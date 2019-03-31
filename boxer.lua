@@ -56,7 +56,7 @@ local function createClass(parent)
 	function class.extend() return createClass(class) end
 
 	function class:__index(k)
-		if class.properties[k] then
+		if class.properties and class.properties[k] then
 			if class.properties[k].get then
 				return class.properties[k].get(self)
 			end
@@ -67,7 +67,7 @@ local function createClass(parent)
 	end
 
 	function class:__newindex(k, v)
-		if class.properties[k] then
+		if class.properties and class.properties[k] then
 			if class.properties[k].set then
 				class.properties[k].set(self, v)
 			else
