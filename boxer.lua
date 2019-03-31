@@ -96,7 +96,48 @@ local function setCommonOptions(box, options)
 	box.onPress = options.onPress
 end
 
-local Box = {}
+local Box = {
+	properties = {
+		x = {
+			get = function(self) return self:getX(0) end,
+			set = function(self, v) self:setX(v, 0) end,
+		},
+		left = {
+			get = function(self) return self:getX(0) end,
+			set = function(self, v) self:setX(v, 0) end,
+		},
+		center = {
+			get = function(self) return self:getX(.5) end,
+			set = function(self, v) self:setX(v, .5) end,
+		},
+		right = {
+			get = function(self) return self:getX(1) end,
+			set = function(self, v) self:setX(v, 1) end,
+		},
+		y = {
+			get = function(self) return self:getY(0) end,
+			set = function(self, v) self:setY(v, 0) end,
+		},
+		top = {
+			get = function(self) return self:getY(0) end,
+			set = function(self, v) self:setY(v, 0) end,
+		},
+		middle = {
+			get = function(self) return self:getY(.5) end,
+			set = function(self, v) self:setY(v, .5) end,
+		},
+		bottom = {
+			get = function(self) return self:getY(1) end,
+			set = function(self, v) self:setY(v, 1) end,
+		},
+		width = {},
+		height = {},
+		clipChildren = {},
+		transparent = {},
+		hidden = {},
+		disabled = {},
+	}
+}
 
 -- gets a position along the x-axis of the box depending on the offset
 -- (0 = left, 0.5 = center, 1 = right, etc.)
@@ -333,59 +374,22 @@ function Box:draw(stencilValue)
 end
 
 function Box:__index(k)
-	if k == 'x' or k == 'left' then
-		return self:getX(0)
-	elseif k == 'center' then
-		return self:getX(.5)
-	elseif k == 'right' then
-		return self:getX(1)
-	elseif k == 'y' or k == 'top' then
-		return self:getY(0)
-	elseif k == 'middle' then
-		return self:getY(.5)
-	elseif k == 'bottom' then
-		return self:getY(1)
-	elseif k == 'width' then
-		return get(self._width)
-	elseif k == 'height' then
-		return get(self._height)
-	elseif k == 'clipChildren' then
-		return get(self._clipChildren)
-	elseif k == 'transparent' then
-		return get(self._transparent)
-	elseif k == 'hidden' then
-		return get(self._hidden)
-	elseif k == 'disabled' then
-		return get(self._disabled)
+	if Box.properties[k] then
+		if Box.properties[k].get then
+			return Box.properties[k].get(self)
+		end
+		return get(self['_' .. k])
 	end
 	return Box[k]
 end
 
 function Box:__newindex(k, v)
-	if k == 'x' or k == 'left' then
-		self:setX(v, 0)
-	elseif k == 'center' then
-		self:setX(v, .5)
-	elseif k == 'right' then
-		self:setX(v, 1)
-	elseif k == 'y' or k == 'top' then
-		self:setY(v, 0)
-	elseif k == 'middle' then
-		self:setY(v, .5)
-	elseif k == 'bottom' then
-		self:setY(v, 1)
-	elseif k == 'width' then
-		self._width = v
-	elseif k == 'height' then
-		self._height = v
-	elseif k == 'clipChildren' then
-		self._clipChildren = v
-	elseif k == 'transparent' then
-		self._transparent = v
-	elseif k == 'hidden' then
-		self._hidden = v
-	elseif k == 'disabled' then
-		self._disabled = v
+	if Box.properties[k] then
+		if Box.properties[k].set then
+			Box.properties[k].set(self, v)
+		else
+			self['_' .. k] = v
+		end
 	else
 		rawset(self, k, v)
 	end
