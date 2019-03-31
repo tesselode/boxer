@@ -285,7 +285,7 @@ function Box:mousemoved(x, y, dx, dy, istouch)
 		self:onMove(x - self.x, y - self.y, dx, dy)
 	end
 	if self.onDrag and self._pressed then
-		self:onDrag(self._pressed, dx, dy)
+		self:onDrag(self._pressed, x - self.x, y - self.y, dx, dy)
 	end
 	if self._hovered and not self._hoveredPrevious and self.onEnter then
 		self:onEnter()
