@@ -91,43 +91,6 @@ local function createClass(parent)
 	return class
 end
 
--- makes sure that an options table doesn't have more than one horizontal
--- or vertical position property
-local function validatePositionOptions(options)
-	if count(options.x, options.left, options.center, options.right) > 1 then
-		error('Cannot provide more than one horizontal position property', 3)
-	end
-	if count(options.y, options.top, options.middle, options.bottom) > 1 then
-		error('Cannot provide more than one vertical position property', 3)
-	end
-end
-
--- given an options table, sets properties (and defaults) of a box
--- that are common to every boxer class
-local function setCommonOptions(box, options)
-	box.x, box.y = 0, 0
-	if options.x then box.x = options.x end
-	if options.left then box.left = options.left end
-	if options.center then box.center = options.center end
-	if options.right then box.right = options.right end
-	if options.y then box.y = options.y end
-	if options.top then box.top = options.top end
-	if options.middle then box.middle = options.middle end
-	if options.bottom then box.bottom = options.bottom end
-	box.style = options.style
-	box.children = options.children or {}
-	box.clipChildren = options.clipChildren
-	box.transparent = options.transparent
-	box.hidden = options.hidden
-	box.disabled = options.disabled
-	box.onMove = options.onMove
-	box.onDrag = options.onDrag
-	box.onEnter = options.onEnter
-	box.onLeave = options.onLeave
-	box.onClick = options.onClick
-	box.onPress = options.onPress
-end
-
 local Box = createClass()
 
 Box.properties = {
@@ -171,15 +134,52 @@ Box.properties = {
 	disabled = {},
 }
 
+-- makes sure that an options table doesn't have more than one horizontal
+-- or vertical position property
+function Box:validatePositionOptions(options)
+	if count(options.x, options.left, options.center, options.right) > 1 then
+		error('Cannot provide more than one horizontal position property', 3)
+	end
+	if count(options.y, options.top, options.middle, options.bottom) > 1 then
+		error('Cannot provide more than one vertical position property', 3)
+	end
+end
+
+-- given an options table, sets properties (and defaults) of a box
+-- that are common to every boxer class
+function Box:setCommonOptions(options)
+	self.x, self.y = 0, 0
+	if options.x then self.x = options.x end
+	if options.left then self.left = options.left end
+	if options.center then self.center = options.center end
+	if options.right then self.right = options.right end
+	if options.y then self.y = options.y end
+	if options.top then self.top = options.top end
+	if options.middle then self.middle = options.middle end
+	if options.bottom then self.bottom = options.bottom end
+	self.style = options.style
+	self.children = options.children or {}
+	self.clipChildren = options.clipChildren
+	self.transparent = options.transparent
+	self.hidden = options.hidden
+	self.disabled = options.disabled
+	self.onMove = options.onMove
+	self.onDrag = options.onDrag
+	self.onEnter = options.onEnter
+	self.onLeave = options.onLeave
+	self.onClick = options.onClick
+	self.onPress = options.onPress
+end
+
 function Box:init(options)
-	validatePositionOptions(options)
-	
+	self:validatePositionOptions(options)
+
 	self._hoveredPrevious = false
 	self._hovered = false
 	self._pressed = false
 	self.width = options.width or 0
 	self.height = options.height or 0
-	setCommonOptions(self, options)
+	self:setCommonOptions(options)
 end
 
 -- gets a position along the x-axis of the box depending on the offset
@@ -522,7 +522,7 @@ function Text:init(options)
 	if count(options.height, options.scaleY) > 1 then
 		error('Cannot provide both height and scaleY', 2)
 	end
-	validatePositionOptions(options)
+	self:validatePositionOptions(options)
 
 	self.text = options.text
 	self.font = options.font
@@ -531,7 +531,7 @@ function Text:init(options)
 	if options.scaleY then self.scaleY = options.scaleY end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
-	setCommonOptions(self, options)
+	self:setCommonOptions(options)
 	if options.transparent == nil then self.transparent = true end
 end
 
@@ -580,12 +580,12 @@ function Paragraph:init(options)
 	if options.height then
 		error('Cannot set height of a paragraph directly', 2)
 	end
-	validatePositionOptions(options)
+	self:validatePositionOptions(options)
 
 	self.text = options.text
 	self.font = options.font
 	self.width = options.width
-	setCommonOptions(self, options)
+	self:setCommonOptions(options)
 	if options.transparent == nil then self.transparent = true end
 end
 
@@ -636,7 +636,7 @@ function Image:init(options)
 	if count(options.height, options.scaleY) > 1 then
 		error('Cannot provide both height and scaleY', 2)
 	end
-	validatePositionOptions(options)
+	self:validatePositionOptions(options)
 
 	self.image = options.image
 	self.scaleX, self.scaleY = 1, 1
@@ -644,7 +644,7 @@ function Image:init(options)
 	if options.scaleY then self.scaleY = options.scaleY end
 	if options.width then self.width = options.width end
 	if options.height then self.height = options.height end
-	setCommonOptions(self, options)
+	self:setCommonOptions(options)
 end
 
 boxer.Image = Image
@@ -680,11 +680,11 @@ function Ellipse:stencil()
 end
 
 function Ellipse:init(options)
-	validatePositionOptions(options)
+	self:validatePositionOptions(options)
 
 	self.width = options.width or 0
 	self.height = options.height or 0
-	setCommonOptions(self, options)
+	self:setCommonOptions(options)
 end
 
 boxer.Ellipse = Ellipse
