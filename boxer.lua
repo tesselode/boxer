@@ -463,7 +463,7 @@ function boxer.wrap(options)
 		end
 	end
 	-- return the box
-	return boxer.box {
+	return boxer.Box {
 		left = left,
 		top = top,
 		width = right - left,
