@@ -83,7 +83,7 @@ local function createClass(parent)
 	setmetatable(class, {
 		__call = function(self, ...)
 			local instance = setmetatable({}, class)
-			if instance.init then instance:init(...) end
+			if instance.new then instance:new(...) end
 			return instance
 		end,
 	})
@@ -171,7 +171,7 @@ function Box:setCommonOptions(options)
 	self.onPress = options.onPress
 end
 
-function Box:init(options)
+function Box:new(options)
 	self:validatePositionOptions(options)
 
 	self._hoveredPrevious = false
@@ -508,7 +508,7 @@ function Text:drawSelf()
 	love.graphics.print(self.text, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
-function Text:init(options)
+function Text:new(options)
 	-- validate options
 	if not options.text then
 		error('Must provide a text string', 2)
@@ -566,7 +566,7 @@ function Paragraph:drawSelf()
 	love.graphics.printf(self.text, 0, 0, self.width, self.align)
 end
 
-function Paragraph:init(options)
+function Paragraph:new(options)
 	-- validate options
 	if not options.text then
 		error('Must provide a text string', 2)
@@ -625,7 +625,7 @@ function Image:drawSelf()
 	love.graphics.draw(self.image, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
-function Image:init(options)
+function Image:new(options)
 	-- validate options
 	if not options.image then
 		error('Must provide an image', 2)
@@ -679,7 +679,7 @@ function Ellipse:stencil()
 		self.width/2, self.height/2, self.segments)
 end
 
-function Ellipse:init(options)
+function Ellipse:new(options)
 	self:validatePositionOptions(options)
 
 	self.width = options.width or 0
