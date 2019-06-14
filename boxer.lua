@@ -41,9 +41,9 @@ end
 	or a function that returns a raw value. this function will call the function if
 	necessary and return the raw value.
 ]]
-local function get(value)
+local function get(self, value)
 	if type(value) == 'function' then
-		return value()
+		return value(self)
 	else
 		return value
 	end
@@ -60,7 +60,7 @@ local function createClass(parent)
 			if class.properties[k].get then
 				return class.properties[k].get(self)
 			end
-			return get(self['_' .. k])
+			return get(self, self['_' .. k])
 		end
 		if class[k] then return class[k] end
 		if parent then return parent.__index(self, k) end
@@ -186,7 +186,7 @@ end
 -- (0 = left, 0.5 = center, 1 = right, etc.)
 function Box:getX(offset)
 	offset = offset or 0
-	local x = get(self._x)
+	local x = get(self, self._x)
 	x = x - self.width * self._anchorX
 	return x + self.width * offset
 end
@@ -195,7 +195,7 @@ end
 -- (0 = top, 0.5 = middle, 1 = bottom, etc.)
 function Box:getY(offset)
 	offset = offset or 0
-	local y = get(self._y)
+	local y = get(self, self._y)
 	y = y - self.height * self._anchorY
 	return y + self.height * offset
 end
@@ -219,11 +219,11 @@ end
 function Box:getCurrentStyle(property)
 	if not self.style then return end
 	if self._pressed and self.style.pressed and self.style.pressed[property] then
-		return get(self.style.pressed[property])
+		return get(self, self.style.pressed[property])
 	elseif self._hovered and self.style.hovered and self.style.hovered[property] then
-		return get(self.style.hovered[property])
+		return get(self, self.style.hovered[property])
 	elseif self.style.idle then
-		return get(self.style.idle[property])
+		return get(self, self.style.idle[property])
 	end
 end
 
