@@ -217,13 +217,14 @@ end
 -- gets a style property given the box's state
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
-	if not (self.style and self.style.idle) then return nil end
+	if not self.style then return end
 	if self._pressed and self.style.pressed and self.style.pressed[property] then
 		return get(self.style.pressed[property])
 	elseif self._hovered and self.style.hovered and self.style.hovered[property] then
 		return get(self.style.hovered[property])
+	elseif self.style.idle then
+		return get(self.style.idle[property])
 	end
-	return get(self.style.idle[property])
 end
 
 function Box:containsPoint(x, y)
@@ -498,13 +499,23 @@ Text.properties = {
 }
 
 function Text:drawSelf()
-	local r, g, b, a = self:getCurrentStyle 'color'
-	if r then
-		love.graphics.setColor(r, g, b, a)
+	love.graphics.setFont(self.font)
+	if self:getCurrentStyle 'shadowColor' then
+		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
+		love.graphics.print(
+			self.text,
+			self:getCurrentStyle 'shadowOffsetX' or 1,
+			self:getCurrentStyle 'shadowOffsetY' or 1,
+			0,
+			self.scaleX,
+			self.scaleY
+		)
+	end
+	if self:getCurrentStyle 'color' then
+		love.graphics.setColor(self:getCurrentStyle 'color')
 	else
 		love.graphics.setColor(1, 1, 1)
 	end
-	love.graphics.setFont(self.font)
 	love.graphics.print(self.text, 0, 0, 0, self.scaleX, self.scaleY)
 end
 
@@ -556,13 +567,22 @@ Paragraph.properties = {
 }
 
 function Paragraph:drawSelf()
-	local r, g, b, a = self:getCurrentStyle 'color'
-	if r then
-		love.graphics.setColor(r, g, b, a)
+	love.graphics.setFont(self.font)
+	if self:getCurrentStyle 'shadowColor' then
+		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
+		love.graphics.print(
+			self.text,
+			self:getCurrentStyle 'shadowOffsetX' or 1,
+			self:getCurrentStyle 'shadowOffsetY' or 1,
+			self.width,
+			self.align
+		)
+	end
+	if self:getCurrentStyle 'color' then
+		love.graphics.setColor(self:getCurrentStyle 'color')
 	else
 		love.graphics.setColor(1, 1, 1)
 	end
-	love.graphics.setFont(self.font)
 	love.graphics.printf(self.text, 0, 0, self.width, self.align)
 end
 

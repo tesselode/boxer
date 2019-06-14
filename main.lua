@@ -15,6 +15,20 @@ local ellipse = boxer.Ellipse {
 			fillColor = {.5, .5, .5},
 		},
 	},
+	children = {
+		boxer.Text {
+			center = 200,
+			middle = 100,
+			font = love.graphics.newFont(32),
+			text = 'test text please ignore',
+			style = {
+				hovered = {
+					shadowColor = {0, 0, 0},
+					shadowOffsetX = 5,
+				}
+			}
+		}
+	}
 }
 
 local image = boxer.Image {
