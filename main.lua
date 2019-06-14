@@ -39,19 +39,25 @@ local image = boxer.Image {
 	height = 100,
 }
 
+local container = boxer.Box()
+container.children = {ellipse, image}
+container:wrap(16)
+container.x = 16
+container.y = 16
+container.style = {idle = {fillColor = {.1, .1, .1}}}
+
 function love.mousemoved(...)
-	ellipse:mousemoved(...)
+	container:mousemoved(...)
 end
 
 function love.mousepressed(...)
-	ellipse:mousepressed(...)
+	container:mousepressed(...)
 end
 
 function love.mousereleased(...)
-	ellipse:mousereleased(...)
+	container:mousereleased(...)
 end
 
 function love.draw()
-	ellipse:draw()
-	image:draw()
+	container:draw()
 end

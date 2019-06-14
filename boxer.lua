@@ -172,8 +172,8 @@ function Box:setCommonOptions(options)
 end
 
 function Box:new(options)
+	options = options or {}
 	self:validatePositionOptions(options)
-
 	self._hoveredPrevious = false
 	self._hovered = false
 	self._pressed = false
@@ -252,6 +252,53 @@ end
 function Box:setY(y, anchorY)
 	anchorY = anchorY or 0
 	self._y, self._anchorY = y, anchorY
+end
+
+--[[
+	resizes the box to contain all of the children and adjusts
+	the childrens' positions to be relative to the new position
+	of the box.
+]]
+function Box:wrap(padding)
+	if #self.children == 0 then return end
+	padding = padding or 0
+	-- get a bounding box around the children
+	local left = self.children[1].left
+	local top = self.children[1].top
+	local right = self.children[1].right
+	local bottom = self.children[1].bottom
+	for i = 2, #self.children do
+		local child = self.children[i]
+		left = math.min(left, child.left)
+		top = math.min(top, child.top)
+		right = math.max(right, child.right)
+		bottom = math.max(bottom, child.bottom)
+	end
+	-- add padding
+	left = left - padding
+	top = top - padding
+	right = right + padding
+	bottom = bottom + padding
+	-- adjust child positions
+	for _, child in ipairs(self.children) do
+		if type(child._x) == 'function' then
+			local oldX = child._x
+			child._x = function() return oldX() - left end
+		else
+			child._x = child._x - left
+		end
+		if type(child._y) == 'function' then
+			local oldY = child._y
+			child._y = function() return oldY() - top end
+		else
+			child._y = child._y - top
+		end
+	end
+	-- resize the box
+	self.left = left
+	self.top = top
+	self.width = right - left
+	self.height = bottom - top
 end
 
 --[[
@@ -430,47 +477,10 @@ function boxer.wrap(options)
 	if not (options.children and #options.children > 0) then
 		error('Must provide at least one child to wrap', 2)
 	end
-	local padding = options.padding or 0
-	-- get the bounds of the box
-	local left = options.children[1].left
-	local top = options.children[1].top
-	local right = options.children[1].right
-	local bottom = options.children[1].bottom
-	for i = 2, #options.children do
-		local child = options.children[i]
-		left = math.min(left, child.left)
-		top = math.min(top, child.top)
-		right = math.max(right, child.right)
-		bottom = math.max(bottom, child.bottom)
-	end
-	-- add padding
-	left = left - padding
-	top = top - padding
-	right = right + padding
-	bottom = bottom + padding
-	-- adjust child positions
-	for _, child in ipairs(options.children) do
-		if type(child._x) == 'function' then
-			local oldX = child._x
-			child._x = function() return oldX() - left end
-		else
-			child._x = child._x - left
-		end
-		if type(child._y) == 'function' then
-			local oldY = child._y
-			child._y = function() return oldY() - top end
-		else
-			child._y = child._y - top
-		end
-	end
-	-- return the box
-	return boxer.Box {
-		left = left,
-		top = top,
-		width = right - left,
-		height = bottom - top,
-		children = options.children,
-	}
+	local box = boxer.Box()
+	box.children = options.children
+	box:wrap(options.padding)
+	return box
 end
 
 local Text = Box.extend()
@@ -521,6 +531,9 @@ end
 
 function Text:new(options)
 	-- validate options
+	if not options then
+		error('Must provide an options table', 2)
+	end
 	if not options.text then
 		error('Must provide a text string', 2)
 	end
@@ -588,6 +601,9 @@ end
 
 function Paragraph:new(options)
 	-- validate options
+	if not options then
+		error('Must provide an options table', 2)
+	end
 	if not options.text then
 		error('Must provide a text string', 2)
 	end
@@ -647,6 +663,9 @@ end
 
 function Image:new(options)
 	-- validate options
+	if not options then
+		error('Must provide an options table', 2)
+	end
 	if not options.image then
 		error('Must provide an image', 2)
 	end
@@ -700,8 +719,8 @@ function Ellipse:stencil()
 end
 
 function Ellipse:new(options)
+	options = options or {}
 	self:validatePositionOptions(options)
-
 	self.width = options.width or 0
 	self.height = options.height or 0
 	self:setCommonOptions(options)
