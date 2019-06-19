@@ -1,7 +1,7 @@
 Boxer
 =====
 
-**Boxer** is a library for arranging and drawing shapes in LÖVE. It's best used for positioning rectangular objects, such as images and text. It also handles mouse events, making it a good base for UI work.
+**Boxer** is a library for arranging and drawing graphics in LÖVE. It also handles mouse events, making it a good base for UI work.
 
 Table of contents
 -----------------
@@ -36,10 +36,10 @@ Usage
 
 ### Creating boxes
 
-A box is the basic object that Boxer creates. To create a box, use `boxer.box`:
+A box is the basic object that Boxer creates. To create a box, use `boxer.Box`:
 
 ```lua
-local box = boxer.box {
+local box = boxer.Box {
 	x = 500,
 	bottom = 300,
 	width = 50,
@@ -47,7 +47,9 @@ local box = boxer.box {
 }
 ```
 
-To create a box, you have to define exactly one horizontal position property (`x`, `left`, `center`, or `right`) and one vertical position property (`y`, `top`, `middle`, or `bottom`), as well as `width` and `height` properties. These are the only required properties, but you can also pass in any other valid `Box` properties (see the [Box API](#box) for more details).
+Usually, you'll want to specify a horizontal position property (`x`, `left`, `center`, or `right`), a vertical position property (`y`, `top`, `middle`, or `bottom`), a `width`, and a `height`. You can also set any other valid `Box` property (see the [Box API](#box) for more details).
+
+If you don't specify a position and size, or if you call `boxer.box` with no arguments, `x`, `y`, `width`, and `height` will all default to 0.
 
 ### Positioning boxes
 
@@ -55,14 +57,6 @@ The easiest way to position boxes is to set the position properties. For example
 
 ```lua
 box2.right = box1.left
-```
-
-You can also set many box properties to a function, and the property will be automatically updated to the function's return value. For example, this code will keep a box's bottom edge aligned with the bottom of the window, even if the window is resized:
-
-```lua
-box.bottom = function()
-	return love.graphics.getHeight()
-end
 ```
 
 If you need more control, you can use `getX` and `getY` to get the position of an arbitrary point along the x or y axis of a box:
@@ -84,6 +78,24 @@ When you set a position, the anchor point is remembered, so that changing the wi
 box1:setX(box2:getX(.5), 1) -- sets the right edge of box1 to the horizontal center of box2
 box1.width = box1.width + 100
 -- the right edge of box1 will still be at the horizontal center of box2
+```
+
+### Dynamic properties
+
+You can set many box properties to a function, and the property will be automatically updated to the function's return value. For example, this code will keep a box's bottom edge aligned with the bottom of the window, even if the window is resized:
+
+```lua
+box.bottom = function()
+	return love.graphics.getHeight()
+end
+```
+
+Property functions will receive the box as the first argument, so you can access properties of the box within the function. This code will set a box's vertical position to be the same as its horizontal position:
+
+```lua
+box.y = function(self)
+	return self.x
+end
 ```
 
 ### Mouse events
@@ -147,6 +159,22 @@ box.style = {
 	pressed = {
 		fillColor = {.3, .3, .3},
 	},
+}
+```
+
+Like with other properties, the style properties can be functions:
+
+```lua
+box.style = {
+	idle = {
+		fillColor = function()
+			if love.keyboard.isDown 'space' then
+				return .5, .5, .5
+			else
+				return .2, .2, .2
+			end
+		end,
+	}
 }
 ```
 
@@ -232,12 +260,18 @@ local container = boxer.wrap {
 }
 ```
 
+If you already have a box with children and you want to adjust its bounds to neatly contain the children, you can call `box:wrap()`:
+
+```lua
+box:wrap(32) -- takes 1 argument for padding
+```
+
 ### Images
 
 Boxer has a special object for images.
 
 ```lua
-local image = boxer.image {
+local image = boxer.Image {
 	x = 25,
 	y = 25,
 	image = love.graphics.newImage 'bean man.jpg',
@@ -258,7 +292,7 @@ Boxer has two different objects for drawing text: `Text` and `Paragraph`.
 The `Text` object draws text on a single line (or multiple lines if the text string contains newlines).
 
 ```lua
-local text = boxer.text {
+local text = boxer.Text {
 	x = 30,
 	y = 50,
 	font = love.graphics.newFont(32),
@@ -277,7 +311,7 @@ Similarly to images, `Text` objects have `scaleX` and `scaleY` properties as wel
 Boxer also provides a `Paragraph` object. The text in `Paragraph` objects will automatically wrap to new lines according to the maximum `width`.
 
 ```lua
-local text = boxer.paragraph {
+local text = boxer.Paragraph {
 	x = 30,
 	y = 50,
 	font = love.graphics.newFont(32),
@@ -297,15 +331,9 @@ API
 #### Constructors
 
 ```lua
-local box = boxer.box {
-	x/left/center/right: number,
-	y/top/middle/bottom: number,
-	width: number,
-	height: number,
-	...
-}
+local box = boxer.Box {...}
 ```
-Creates a new box. Takes an options table to set the properties for the box. Exactly one horizontal position property and one vertical position property must be defined, as well as `width` and `height`. Any other box properties can also be defined to set them immediately on the new box.
+Creates a new box. Takes an options table to set the properties for the box. Any Box property can be defined in this table.
 
 ```lua
 local box = boxer.wrap {children: table, padding: number = 0}
@@ -332,7 +360,12 @@ Gets the position and size of the box. Useful for plugging into `love.graphics` 
 ```lua
 local containsPoint = box:containsPoint(x: number, y: number)
 ```
-Returns whether the specified point is within the box's bounds.
+Returns whether the specified point is within the box's bounds. Custom classes can redefine this depending on the shape of the box.
+
+```lua
+local box = box:getChild(name)
+```
+Returns the child with the specified `name`, or `false` if there is none.
 
 ```lua
 box:setX(x: number, anchorX: number = 0)
@@ -363,6 +396,72 @@ Informs the box about mouse release events. The arguments correspond to those of
 box:draw()
 ```
 Draws the box (if a style is set) and its children.
+
+##### Functions useful for creating custom classes
+
+```lua
+local CustomBox = Box.extend()
+```
+Creates a new class that inherits from the given class. Custom properties can be defined by setting `CustomBox.properties`:
+
+```lua
+CustomBox.properties = {
+	property1 = {
+		get = function(self) ... end,
+		set = function(self, value) ... end,
+	},
+	property2 = {},
+}
+```
+
+Each property can have a custom getter and setter. If they're not defined, the property will default to being a dynamic property, like `box.width`.
+
+```lua
+box:validatePositionOptions(options)
+```
+Given an `options` table, throws an error if there's more than one horizontal or vertical position property in the table.
+
+```lua
+box:setCommonOptions(options)
+```
+Sets the following box properties according to the values in the `options` table, or a default if it's not defined:
+- `x` (`0`)
+- `left` (`0`)
+- `center`
+- `right`
+- `y` (`0`)
+- `top` (`0`)
+- `middle`
+- `bottom`
+- `style`
+- `children` (`{}`)
+- `clipChildren`
+- `transparent`
+- `hidden`
+- `disabled`
+- `onMove`
+- `onDrag`
+- `onEnter`
+- `onLeave`
+- `onClick`
+- `onPress`
+
+Note that `width` and `height` are not set in this function, as different classes may use these properties in different ways. If you're extending from the base `Box` class, you will need to set these to *something*, even if they're dummy values of (0, 0).
+
+```lua
+box:getCurrentStyle(propertyName)
+```
+Gets the current value of the style property with the given `propertyName`, depending on whether the box is idle, hovered, or pressed.
+
+```lua
+box:drawSelf()
+```
+Draws the box itself without drawing its children. If you create a custom class, you can redefine this function to change how the box looks. Note that this function should always draw the box as if its position is (0, 0), as `box.draw` will apply the transformation for you.
+
+```lua
+box:stencil()
+```
+Draws the shapes that will be used to clip children if `clipChildren` is set to `true`. If you create a custom class, you can redefine this function to change how children are clipped. Note that this function should always draw the shapes as if the box's position is (0, 0), as `box.draw` will apply the transformation for you.
 
 #### Callbacks
 
@@ -408,9 +507,9 @@ Called when the box is clicked and dragged.
 - `pressed` (`false | number`) (readonly) - the number of the mouse button the box is currently being held down by, or `false` if it is not being held down.
 
 #### Style properties
-- `outlineColor` (`table` | `function -> table`) - the color to draw the outline with.
+- `outlineColor` (`table` | `function -> r, g, b, a`, `function -> table`) - the color to draw the outline with.
 - `lineWidth` (`number` | `function -> number`) - the line width to use for drawing the outline.
-- `fillColor` (`table` | `function -> table`) - the color to draw the fill with.
+- `fillColor` (`table` | `function -> r, g, b, a`, `function -> table`) - the color to draw the fill with.
 - `radiusX` (`number` | `function -> number`) - the horizontal radius of the borders of the box.
 - `radiusY` (`number` | `function -> number`) - the vertical radius of the borders of the box.
 
@@ -420,15 +519,13 @@ Called when the box is clicked and dragged.
 #### Constructors
 
 ```lua
-local text = boxer.text {
-	x/left/center/right: number,
-	y/top/middle/bottom: number,
+local text = boxer.Text {
 	text: string,
 	font: Font,
 	...
 }
 ```
-Creates a new text object. Position, text, and font properties are required, but any box or text properties can be included in the options table. Unlike the `Box` constructor, `width` and `height` are optional.
+Creates a new text object. Text and font properties are required, but any other box or text properties can be included in the options table.
 
 #### Properties
 - `text` (`string` | `function -> string`) - the text content to draw.
@@ -439,7 +536,10 @@ Creates a new text object. Position, text, and font properties are required, but
 - `height` (`number`) - the total height of the text. Changing this will affect the `scaleY` of the text.
 
 #### Style properties
-- `color` (`table` | `function -> table`) - the color of the text.
+- `color` (`table` | `function -> r, g, b, a`, `function -> table`) - the color of the text.
+- `shadowColor` (`table` | `function -> r, g, b, a`, `function -> table`) - the color of the text's shadow. If undefined, the text will have no shadow.
+- `shadowOffsetX` (`number` | `function -> number`) - the horizontal offset of the text's shadow in pixels. Defauls to 1 pixel.
+- `shadowOffsetY` (`number` | `function -> number`) - the vertical offset of the text's shadow in pixels. Defauls to 1 pixel.
 
 ### Paragraph
 (inherits from Box)
@@ -447,9 +547,7 @@ Creates a new text object. Position, text, and font properties are required, but
 #### Constructors
 
 ```lua
-local paragraph = boxer.paragraph {
-	x/left/center/right: number,
-	y/top/middle/bottom: number,
+local paragraph = boxer.Paragraph {
 	width: number,
 	text: string,
 	font: Font,
@@ -466,7 +564,10 @@ Creates a new paragraph object. Works similarly to the Text object, but the text
 - `height` (`number`) (readonly) - the total height of the paragraph. Unlike the Text object, this cannot be changed, as it is a product of the width of the box and the amount/size of text.
 
 #### Style properties
-- `color` (`table` | `function -> table`) - the color of the text.
+- `color` (`table` | `function -> r, g, b, a`, `function -> table`) - the color of the text.
+- `shadowColor` (`table` | `function -> r, g, b, a`, `function -> table`) - the color of the text's shadow. If undefined, the text will have no shadow.
+- `shadowOffsetX` (`number` | `function -> number`) - the horizontal offset of the text's shadow in pixels. Defauls to 1 pixel.
+- `shadowOffsetY` (`number` | `function -> number`) - the vertical offset of the text's shadow in pixels. Defauls to 1 pixel.
 
 ### Image
 (inherits from Box)
@@ -474,14 +575,12 @@ Creates a new paragraph object. Works similarly to the Text object, but the text
 #### Constructors
 
 ```lua
-local image = boxer.image {
-	x/left/center/right: number,
-	y/top/middle/bottom: number,
+local image = boxer.Image {
 	image: Image,
 	...
 }
 ```
-Creates a new image object. Position and image properties are required, but any box or image properties can be included in the options table. Unlike the `Box` constructor, `width` and `height` are optional.
+Creates a new image object.
 
 #### Properties
 - `image` (`Image` | `function -> Image`) - the image to draw.
@@ -491,7 +590,7 @@ Creates a new image object. Position and image properties are required, but any 
 - `height` (`number`) - the total height of the image. Changing this will affect the `scaleY` of the image.
 
 #### Style properties
-- `color` (`table` | `function -> table`) - the color of the image (blends with the colors of the image content).
+- `color` (`table` | `function -> r, g, b, a`, `function -> table`) - the color of the image (blends with the colors of the image content).
 
 Contributing
 ------------
