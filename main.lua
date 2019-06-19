@@ -1,23 +1,22 @@
 local boxer = require 'boxer'
 
-local text = boxer.Text {
-	y = function(self) return self.x end,
-	font = love.graphics.newFont(32),
-	text = 'test text please ignore',
-	style = {
-		idle = {
-			shadowColor = {.5, .5, .5},
-			shadowOffsetX = function(self)
-				return self.x / 50
-			end,
+local box = boxer.Box {
+	x = 50,
+	y = 50,
+	width = 100,
+	height = 200,
+	style = {idle = {fillColor = {.2, .2, .2}}},
+	children = {
+		boxer.Text {
+			font = love.graphics.newFont(32),
+			text = 'test text please ignore',
 		}
-	}
+	},
+	clipChildren = true,
 }
 
-function love.update(dt)
-	text.x = text.x + 100 * dt
-end
-
 function love.draw()
-	text:draw()
+	box:draw()
+
+	love.graphics.print('Memory usage: ' .. math.floor(collectgarbage 'count') .. 'kb')
 end

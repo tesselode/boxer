@@ -433,13 +433,13 @@ end
 -- "pushes" a stencil onto the "stack". used for nested stencils
 function Box:_pushStencil(stencilValue)
 	love.graphics.push 'all'
-	love.graphics.stencil(function() self:stencil() end, 'increment', 1, true)
+	love.graphics.stencil(self.stencilFunction, 'increment', 1, true)
 	love.graphics.setStencilTest('greater', stencilValue)
 end
 
 -- "pops" a stencil from the "stack". used for nested stencils
 function Box:_popStencil()
-	love.graphics.stencil(function() self:stencil() end, 'decrement', 1, true)
+	love.graphics.stencil(self.stencilFunction, 'decrement', 1, true)
 	love.graphics.pop()
 end
 
@@ -451,6 +451,10 @@ function Box:draw(stencilValue)
 	love.graphics.translate(self:getRect())
 	self:drawSelf()
 	if self.clipChildren then
+		-- cache the stencil function so we don't have to create it every frame
+		self.stencilFunction = self.stencilFunction or function()
+			self:stencil()
+		end
 		self:_pushStencil(stencilValue)
 		for _, child in ipairs(self.children) do
 			child:draw(stencilValue + 1)
