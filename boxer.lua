@@ -174,9 +174,6 @@ end
 function Box:new(options)
 	options = options or {}
 	self:validatePositionOptions(options)
-	self._hoveredPrevious = false
-	self._hovered = false
-	self._pressed = false
 	self.width = options.width or 0
 	self.height = options.height or 0
 	self:setCommonOptions(options)
