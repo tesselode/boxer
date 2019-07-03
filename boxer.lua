@@ -213,6 +213,20 @@ function Box:getChild(name)
 	return false
 end
 
+-- gets the left, top, right, and bottom bounds of a rectangle
+-- that perfectly surrounds all of this box's children
+function Box:getChildrenBounds()
+	if #self == 0 then return nil, nil, nil, nil end
+	local left, top, right, bottom = self[1].left, self[1].top, self[1].right, self[1].bottom
+	for i = 2, #self do
+		left = math.min(left, self[i].left)
+		top = math.min(top, self[i].top)
+		right = math.max(right, self[i].right)
+		bottom = math.max(bottom, self[i].bottom)
+	end
+	return left, top, right, bottom
+end
+
 -- gets a style property given the box's state
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
