@@ -158,7 +158,6 @@ function Box:setCommonOptions(options)
 	if options.middle then self.middle = options.middle end
 	if options.bottom then self.bottom = options.bottom end
 	self.style = options.style
-	self.children = options.children or {}
 	self.clipChildren = options.clipChildren
 	self.transparent = options.transparent
 	self.hidden = options.hidden
@@ -169,6 +168,9 @@ function Box:setCommonOptions(options)
 	self.onLeave = options.onLeave
 	self.onClick = options.onClick
 	self.onPress = options.onPress
+	for _, child in ipairs(options) do
+		table.insert(self, child)
+	end
 end
 
 function Box:new(options)
@@ -203,7 +205,7 @@ end
 
 -- gets a child by name
 function Box:getChild(name)
-	for _, child in ipairs(self.children) do
+	for _, child in ipairs(self) do
 		if child.name == name then
 			return child
 		end
@@ -257,15 +259,15 @@ end
 	of the box.
 ]]
 function Box:wrap(padding)
-	if #self.children == 0 then return end
+	if #self == 0 then return end
 	padding = padding or 0
 	-- get a bounding box around the children
-	local left = self.children[1].left
-	local top = self.children[1].top
-	local right = self.children[1].right
-	local bottom = self.children[1].bottom
-	for i = 2, #self.children do
-		local child = self.children[i]
+	local left = self[1].left
+	local top = self[1].top
+	local right = self[1].right
+	local bottom = self[1].bottom
+	for i = 2, #self do
+		local child = self[i]
 		left = math.min(left, child.left)
 		top = math.min(top, child.top)
 		right = math.max(right, child.right)
@@ -277,7 +279,7 @@ function Box:wrap(padding)
 	right = right + padding
 	bottom = bottom + padding
 	-- adjust child positions
-	for _, child in ipairs(self.children) do
+	for _, child in ipairs(self) do
 		if type(child._x) == 'function' then
 			local oldX = child._x
 			child._x = function() return oldX() - left end
@@ -306,18 +308,18 @@ end
 function Box:mousemoved(x, y, dx, dy, istouch)
 	if self.disabled then return end
 	if self.clipChildren and not self:containsPoint(x, y) then
-		for _, child in ipairs(self.children) do
+		for _, child in ipairs(self) do
 			child:_mouseoff()
 		end
 		self:_mouseoff()
 		return
 	end
-	for i = #self.children, 1, -1 do
-		local child = self.children[i]
+	for i = #self, 1, -1 do
+		local child = self[i]
 		child:mousemoved(x - self.x, y - self.y, dx, dy, istouch)
 		if not child.transparent and child:containsPoint(x - self.x, y - self.y) then
 			for j = i - 1, 1, -1 do
-				local lowerChild = self.children[j]
+				local lowerChild = self[j]
 				lowerChild:_mouseoff()
 			end
 			self:_mouseoff()
@@ -363,8 +365,8 @@ function Box:mousepressed(x, y, button, istouch, presses)
 	if self.clipChildren and not self:containsPoint(x, y) then
 		return
 	end
-	for i = #self.children, 1, -1 do
-		local child = self.children[i]
+	for i = #self, 1, -1 do
+		local child = self[i]
 		if child:containsPoint(x - self.x, y - self.y) then
 			child:mousepressed(x - self.x, y - self.y, button, istouch, presses)
 			if not child.transparent then return end
@@ -390,7 +392,7 @@ function Box:mousereleased(x, y, button, istouch, presses)
 			self:onPress(button)
 		end
 	end
-	for _, child in ipairs(self.children) do
+	for _, child in ipairs(self) do
 		child:mousereleased(x, y, button, istouch, presses)
 	end
 end
@@ -453,12 +455,12 @@ function Box:draw(stencilValue)
 			self:stencil()
 		end
 		self:_pushStencil(stencilValue)
-		for _, child in ipairs(self.children) do
+		for _, child in ipairs(self) do
 			child:draw(stencilValue + 1)
 		end
 		self:_popStencil()
 	else
-		for _, child in ipairs(self.children) do
+		for _, child in ipairs(self) do
 			child:draw(stencilValue)
 		end
 	end
@@ -479,7 +481,9 @@ function boxer.wrap(options)
 		error('Must provide at least one child to wrap', 2)
 	end
 	local box = boxer.Box()
-	box.children = options.children
+	for _, child in ipairs(options.children) do
+		table.insert(box, child)
+	end
 	box:wrap(options.padding)
 	return box
 end

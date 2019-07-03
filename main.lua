@@ -5,14 +5,21 @@ local box = boxer.Box {
 	y = 50,
 	width = 100,
 	height = 200,
-	style = {idle = {fillColor = {.2, .2, .2}}},
-	children = {
-		boxer.Text {
-			font = love.graphics.newFont(32),
-			text = 'test text please ignore',
+	style = {
+		idle = {
+			fillColor = {.5, .5, .5},
 		}
 	},
-	clipChildren = true,
+	boxer.Text {
+		font = love.graphics.newFont(32),
+		text = 'hello world!',
+	},
+	boxer.Image {
+		image = love.graphics.newImage 'bean man.jpg',
+		y = 32,
+		scaleX = .1,
+		scaleY = .1,
+	}
 }
 
 function love.draw()
