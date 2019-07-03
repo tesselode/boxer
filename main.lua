@@ -17,10 +17,16 @@ local box = boxer.Box {
 	}
 }
 
+local box2 = boxer.Box {
+	style = {idle = {outlineColor = {1, 1, 1}}}
+}
+
+function love.update(dt)
+	box2:setBounds(box:getChildrenBounds())
+end
+
 function love.draw()
 	box:draw()
-	local l, t, r, b = box:getChildrenBounds()
-	love.graphics.rectangle('line', l, t, r - l, b - t)
-
+	box2:draw()
 	love.graphics.print('Memory usage: ' .. math.floor(collectgarbage 'count') .. 'kb')
 end

@@ -199,8 +199,20 @@ function Box:getY(offset)
 	return y + self.height * offset
 end
 
-function Box:getRect()
+function Box:getBounds()
+	return self.left, self.top, self.right, self.bottom
+end
+
+function Box:getRectangle()
 	return self.x, self.y, self.width, self.height
+end
+
+function Box:setBounds(left, top, right, bottom)
+	self.x, self.y, self.width, self.height = left, top, right - left, bottom - top
+end
+
+function Box:setRectangle(x, y, width, height)
+	self.x, self.y, self.width, self.height = x, y, width, height
 end
 
 -- gets a child by name
@@ -225,6 +237,13 @@ function Box:getChildrenBounds()
 		bottom = math.max(bottom, self[i].bottom)
 	end
 	return left, top, right, bottom
+end
+
+-- gets the x, y, width, and height bounds of a rectangle
+-- that perfectly surrounds all of this box's children
+function Box:getChildrenRectangle()
+	local left, top, right, bottom = self:getChildrenBounds()
+	return left, top, right - left, bottom - top
 end
 
 -- gets a style property given the box's state
@@ -417,16 +436,15 @@ end
 	is always at 0, 0 (box.draw applies a translation based on the box's position)
 ]]
 function Box:drawSelf()
-	local _, _, width, height = self:getRect()
 	if self:getCurrentStyle 'fillColor' then
 		love.graphics.setColor(self:getCurrentStyle 'fillColor')
-		love.graphics.rectangle('fill', 0, 0, width, height,
-		self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
+		love.graphics.rectangle('fill', 0, 0, self.width, self.height,
+			self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 	end
 	if self:getCurrentStyle 'outlineColor' then
 		love.graphics.setColor(self:getCurrentStyle 'outlineColor')
 		love.graphics.setLineWidth(self:getCurrentStyle 'lineWidth' or 1)
-		love.graphics.rectangle('line', 0, 0, width, height,
+		love.graphics.rectangle('line', 0, 0, self.width, self.height,
 			self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 	end
 end
@@ -438,8 +456,7 @@ end
 	is always at 0, 0 (box.draw applies a translation based on the box's position)
 ]]
 function Box:stencil()
-	local _, _, width, height = self:getRect()
-	love.graphics.rectangle('fill', 0, 0, width, height,
+	love.graphics.rectangle('fill', 0, 0, self.width, self.height,
 		self:getCurrentStyle 'radiusX', self:getCurrentStyle 'radiusY')
 end
 
@@ -461,7 +478,7 @@ function Box:draw(stencilValue)
 	if self.hidden then return end
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
-	love.graphics.translate(self:getRect())
+	love.graphics.translate(self.x, self.y)
 	self:drawSelf()
 	if self.clipChildren then
 		-- cache the stencil function so we don't have to create it every frame
