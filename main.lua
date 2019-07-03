@@ -18,12 +18,11 @@ local box = boxer.Box {
 }
 
 local box2 = boxer.Box {
-	style = {idle = {outlineColor = {1, 1, 1}}}
+	style = {idle = {outlineColor = {1, 1, 1}}},
+	beforeDraw = function(self)
+		self:setBounds(box:getChildrenBounds())
+	end
 }
-
-function love.update(dt)
-	box2:setBounds(box:getChildrenBounds())
-end
 
 function love.draw()
 	box:draw()

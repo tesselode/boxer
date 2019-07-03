@@ -168,6 +168,7 @@ function Box:setCommonOptions(options)
 	self.onLeave = options.onLeave
 	self.onClick = options.onClick
 	self.onPress = options.onPress
+	self.beforeDraw = options.beforeDraw
 	for _, child in ipairs(options) do
 		table.insert(self, child)
 	end
@@ -476,6 +477,7 @@ end
 -- draws the box and its children
 function Box:draw(stencilValue)
 	if self.hidden then return end
+	if self.beforeDraw then self:beforeDraw() end
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
 	love.graphics.translate(self.x, self.y)
