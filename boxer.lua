@@ -528,17 +528,21 @@ Text.properties = {
 	text = {},
 	width = {
 		get = function(self)
+			if not self.text then return 0 end
 			return self.font:getWidth(self.text) * self.scaleX
 		end,
 		set = function(self, v)
+			if not self.text then return end
 			self.scaleX = v / self.font:getWidth(self.text)
 		end,
 	},
 	height = {
 		get = function(self)
+			if not self.text then return 0 end
 			return self.font:getHeight() * self.scaleY
 		end,
 		set = function(self, v)
+			if not self.text then return end
 			self.scaleY = v / self.font:getHeight()
 		end,
 	},
@@ -547,6 +551,7 @@ Text.properties = {
 }
 
 function Text:drawSelf()
+	if not self.text then return end
 	love.graphics.setFont(self.font)
 	if self:getCurrentStyle 'shadowColor' then
 		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
@@ -607,6 +612,7 @@ Paragraph.properties = {
 	width = {},
 	height = {
 		get = function(self)
+			if not self.text then return 0 end
 			local _, lines = self.font:getWrap(self.text, self.width)
 			return #lines * self.font:getHeight() * self.font:getLineHeight()
 		end,
@@ -618,6 +624,7 @@ Paragraph.properties = {
 }
 
 function Paragraph:drawSelf()
+	if not self.text then return end
 	love.graphics.setFont(self.font)
 	if self:getCurrentStyle 'shadowColor' then
 		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
@@ -671,17 +678,21 @@ Image.properties = {
 	image = {},
 	width = {
 		get = function(self)
+			if not self.image then return 0 end
 			return self.image:getWidth() * self.scaleX
 		end,
 		set = function(self, v)
+			if not self.image then return end
 			self.scaleX = v / self.image:getWidth()
 		end,
 	},
 	height = {
 		get = function(self)
+			if not self.image then return 0 end
 			return self.image:getHeight() * self.scaleY
 		end,
 		set = function(self, v)
+			if not self.image then return end
 			self.scaleY = v / self.image:getHeight()
 		end,
 	},
@@ -690,6 +701,7 @@ Image.properties = {
 }
 
 function Image:drawSelf()
+	if not self.image then return end
 	local r, g, b, a = self:getCurrentStyle 'color'
 	if r then
 		love.graphics.setColor(r, g, b, a)
