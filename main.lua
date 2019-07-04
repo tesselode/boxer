@@ -9,11 +9,17 @@ local box = boxer.Box {
 	children = {
 		boxer.Text {
 			font = love.graphics.newFont(32),
-			text = 'test text please ignore',
+			text = function()
+				return love.keyboard.isDown('space') and 'test text please ignore'
+			end,
 		}
 	},
 	clipChildren = true,
 }
+
+function love.update(dt)
+	box:wrap()
+end
 
 function love.draw()
 	box:draw()

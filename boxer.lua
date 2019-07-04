@@ -126,8 +126,12 @@ Box.properties = {
 		get = function(self) return self:getY(1) end,
 		set = function(self, v) self:setY(v, 1) end,
 	},
-	width = {},
-	height = {},
+	width = {
+		get = function(self) return get(self, self._width) or 0 end,
+	},
+	height = {
+		get = function(self) return get(self, self._height) or 0 end,
+	},
 	clipChildren = {},
 	transparent = {},
 	hidden = {},
@@ -148,7 +152,6 @@ end
 -- given an options table, sets properties (and defaults) of a box
 -- that are common to every boxer class
 function Box:setCommonOptions(options)
-	self.x, self.y = 0, 0
 	if options.x then self.x = options.x end
 	if options.left then self.left = options.left end
 	if options.center then self.center = options.center end
@@ -174,17 +177,17 @@ end
 function Box:new(options)
 	options = options or {}
 	self:validatePositionOptions(options)
-	self.width = options.width or 0
-	self.height = options.height or 0
 	self:setCommonOptions(options)
+	self.width = options.width
+	self.height = options.height
 end
 
 -- gets a position along the x-axis of the box depending on the offset
 -- (0 = left, 0.5 = center, 1 = right, etc.)
 function Box:getX(offset)
 	offset = offset or 0
-	local x = get(self, self._x)
-	x = x - self.width * self._anchorX
+	local x = get(self, self._x) or 0
+	x = x - self.width * (self._anchorX or 0)
 	return x + self.width * offset
 end
 
@@ -192,8 +195,8 @@ end
 -- (0 = top, 0.5 = middle, 1 = bottom, etc.)
 function Box:getY(offset)
 	offset = offset or 0
-	local y = get(self, self._y)
-	y = y - self.height * self._anchorY
+	local y = get(self, self._y) or 0
+	y = y - self.height * (self._anchorY or 0)
 	return y + self.height * offset
 end
 
@@ -285,13 +288,13 @@ function Box:wrap(padding)
 			local oldX = child._x
 			child._x = function() return oldX() - (left - self.left) end
 		else
-			child._x = child._x - (left - self.left)
+			child.x = child.x - (left - self.left)
 		end
 		if type(child._y) == 'function' then
 			local oldY = child._y
 			child._y = function() return oldY() - (top - self.top) end
 		else
-			child._y = child._y - (top - self.top)
+			child.y = child.y - (top - self.top)
 		end
 	end
 	-- resize the box
@@ -494,6 +497,7 @@ Text.properties = {
 	text = {},
 	width = {
 		get = function(self)
+			if not self.text then return 0 end
 			return self.font:getWidth(self.text) * self.scaleX
 		end,
 		set = function(self, v)
@@ -502,6 +506,7 @@ Text.properties = {
 	},
 	height = {
 		get = function(self)
+			if not self.text then return 0 end
 			return self.font:getHeight() * self.scaleY
 		end,
 		set = function(self, v)
@@ -513,6 +518,7 @@ Text.properties = {
 }
 
 function Text:drawSelf()
+	if not self.text then return end
 	love.graphics.setFont(self.font)
 	if self:getCurrentStyle 'shadowColor' then
 		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
@@ -573,6 +579,7 @@ Paragraph.properties = {
 	width = {},
 	height = {
 		get = function(self)
+			if not self.text then return 0 end
 			local _, lines = self.font:getWrap(self.text, self.width)
 			return #lines * self.font:getHeight() * self.font:getLineHeight()
 		end,
@@ -584,6 +591,7 @@ Paragraph.properties = {
 }
 
 function Paragraph:drawSelf()
+	if not self.text then return end
 	love.graphics.setFont(self.font)
 	if self:getCurrentStyle 'shadowColor' then
 		love.graphics.setColor(self:getCurrentStyle 'shadowColor')
@@ -637,6 +645,7 @@ Image.properties = {
 	image = {},
 	width = {
 		get = function(self)
+			if not self.image then return 0 end
 			return self.image:getWidth() * self.scaleX
 		end,
 		set = function(self, v)
@@ -645,6 +654,7 @@ Image.properties = {
 	},
 	height = {
 		get = function(self)
+			if not self.image then return 0 end
 			return self.image:getHeight() * self.scaleY
 		end,
 		set = function(self, v)
@@ -656,6 +666,7 @@ Image.properties = {
 }
 
 function Image:drawSelf()
+	if not self.image then return end
 	local r, g, b, a = self:getCurrentStyle 'color'
 	if r then
 		love.graphics.setColor(r, g, b, a)
@@ -720,14 +731,6 @@ end
 function Ellipse:stencil()
 	love.graphics.ellipse('fill', self.width/2, self.height/2,
 		self.width/2, self.height/2, self.segments)
-end
-
-function Ellipse:new(options)
-	options = options or {}
-	self:validatePositionOptions(options)
-	self.width = options.width or 0
-	self.height = options.height or 0
-	self:setCommonOptions(options)
 end
 
 boxer.Ellipse = Ellipse
