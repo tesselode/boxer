@@ -257,19 +257,22 @@ end
 	of the box.
 ]]
 function Box:wrap(padding)
+	-- set the size to (0, 0) if it's not already set
+	self.width = self.width or 0
+	self.height = self.height or 0
 	if #self.children == 0 then return end
 	padding = padding or 0
 	-- get a bounding box around the children
-	local left = self.children[1].left
-	local top = self.children[1].top
-	local right = self.children[1].right
-	local bottom = self.children[1].bottom
+	local left = self.children[1].left + self.x
+	local top = self.children[1].top + self.y
+	local right = self.children[1].right + self.x
+	local bottom = self.children[1].bottom + self.y
 	for i = 2, #self.children do
 		local child = self.children[i]
-		left = math.min(left, child.left)
-		top = math.min(top, child.top)
-		right = math.max(right, child.right)
-		bottom = math.max(bottom, child.bottom)
+		left = math.min(left, child.left + self.x)
+		top = math.min(top, child.top + self.y)
+		right = math.max(right, child.right + self.x)
+		bottom = math.max(bottom, child.bottom + self.y)
 	end
 	-- add padding
 	left = left - padding
@@ -280,15 +283,15 @@ function Box:wrap(padding)
 	for _, child in ipairs(self.children) do
 		if type(child._x) == 'function' then
 			local oldX = child._x
-			child._x = function() return oldX() - left end
+			child._x = function() return oldX() - (left - self.left) end
 		else
-			child._x = child._x - left
+			child._x = child._x - (left - self.left)
 		end
 		if type(child._y) == 'function' then
 			local oldY = child._y
-			child._y = function() return oldY() - top end
+			child._y = function() return oldY() - (top - self.top) end
 		else
-			child._y = child._y - top
+			child._y = child._y - (top - self.top)
 		end
 	end
 	-- resize the box
