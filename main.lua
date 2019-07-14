@@ -5,7 +5,8 @@ local box = boxer.Box {
 	y = 50,
 	width = 50,
 	height = 50,
-	style = {idle = {fillColor = {.1, .1, .1}}}
+	style = {idle = {fillColor = {.1, .1, .1}}},
+	beforeDraw = function(self) self:wrap('moveChildren', 16) end,
 }
 for _ = 1, 5 do
 	table.insert(box.children, boxer.Ellipse {
@@ -31,7 +32,6 @@ function love.keypressed(key)
 end
 
 function love.draw()
-	box:wrap('moveChildren', 16)
 	box:draw()
 
 	love.graphics.print('Memory usage: ' .. math.floor(collectgarbage 'count') .. 'kb')

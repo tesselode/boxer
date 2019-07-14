@@ -166,6 +166,7 @@ function Box:setCommonOptions(options)
 	self.transparent = options.transparent
 	self.hidden = options.hidden
 	self.disabled = options.disabled
+	self.beforeDraw = options.beforeDraw
 	self.onMove = options.onMove
 	self.onDrag = options.onDrag
 	self.onEnter = options.onEnter
@@ -525,6 +526,7 @@ end
 -- draws the box and its children
 function Box:draw(stencilValue)
 	if self.hidden then return end
+	if self.beforeDraw then self:beforeDraw() end
 	stencilValue = stencilValue or 0
 	love.graphics.push 'all'
 	love.graphics.translate(self.x, self.y)
