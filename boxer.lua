@@ -200,6 +200,94 @@ function Box:getY(offset)
 	return y + self.height * offset
 end
 
+function Box:getBounds()
+	return self.left, self.top, self.right, self.bottom
+end
+
+function Box:getRectangle()
+	return self.x, self.y, self.width, self.height
+end
+
+function Box:getChildrenLocalLeft()
+	if #self.children == 0 then return 0 end
+	local left = self.children[1].left
+	for i = 2, #self.children do
+		left = math.min(left, self.children[i].left)
+	end
+	return left
+end
+
+function Box:getChildrenLocalRight()
+	if #self.children == 0 then return 0 end
+	local right = self.children[1].right
+	for i = 2, #self.children do
+		right = math.max(right, self.children[i].right)
+	end
+	return right
+end
+
+function Box:getChildrenLocalTop()
+	if #self.children == 0 then return 0 end
+	local top = self.children[1].top
+	for i = 2, #self.children do
+		top = math.min(top, self.children[i].top)
+	end
+	return top
+end
+
+function Box:getChildrenLocalBottom()
+	if #self.children == 0 then return 0 end
+	local bottom = self.children[1].bottom
+	for i = 2, #self.children do
+		bottom = math.max(bottom, self.children[i].bottom)
+	end
+	return bottom
+end
+
+function Box:getChildrenLeft()
+	return self:getChildrenLocalLeft() + self.x
+end
+
+function Box:getChildrenRight()
+	return self:getChildrenLocalRight() + self.x
+end
+
+function Box:getChildrenTop()
+	return self:getChildrenLocalTop() + self.y
+end
+
+function Box:getChildrenBottom()
+	return self:getChildrenLocalBottom() + self.y
+end
+
+function Box:getChildrenWidth()
+	return self:getChildrenLocalRight() - self:getChildrenLocalLeft()
+end
+
+function Box:getChildrenHeight()
+	return self:getChildrenLocalBottom() - self:getChildrenLocalTop()
+end
+
+function Box:getChildrenLocalBounds()
+	return self:getChildrenLocalLeft(), self:getChildrenLocalTop(),
+		self:getChildrenLocalRight(), self:getChildrenLocalBottom()
+end
+
+function Box:getChildrenLocalRectangle()
+	return self:getChildrenLocalLeft(), self:getChildrenLocalTop(),
+		self:getChildrenWidth(), self:getChildrenHeight()
+end
+
+function Box:getChildrenBounds()
+	return self:getChildrenLeft(), self:getChildrenTop(),
+		self:getChildrenRight(), self:getChildrenBottom()
+end
+
+function Box:getChildrenRectangle()
+	return self:getChildrenLeft(), self:getChildrenTop(),
+		self:getChildrenWidth(), self:getChildrenHeight()
+end
+
 -- gets a style property given the box's state
 -- (idle/pressed/released)
 function Box:getCurrentStyle(property)
@@ -240,54 +328,58 @@ function Box:setY(y, anchorY)
 	self._y, self._anchorY = y, anchorY
 end
 
---[[
-	resizes the box to contain all of the children and adjusts
-	the childrens' positions to be relative to the new position
-	of the box.
-]]
-function Box:wrap(padding)
-	-- set the size to (0, 0) if it's not already set
-	self.width = self.width or 0
-	self.height = self.height or 0
-	if #self.children == 0 then return end
-	padding = padding or 0
-	-- get a bounding box around the children
-	local left = self.children[1].left + self.x
-	local top = self.children[1].top + self.y
-	local right = self.children[1].right + self.x
-	local bottom = self.children[1].bottom + self.y
-	for i = 2, #self.children do
-		local child = self.children[i]
-		left = math.min(left, child.left + self.x)
-		top = math.min(top, child.top + self.y)
-		right = math.max(right, child.right + self.x)
-		bottom = math.max(bottom, child.bottom + self.y)
-	end
-	-- add padding
-	left = left - padding
-	top = top - padding
-	right = right + padding
-	bottom = bottom + padding
-	-- adjust child positions
-	for _, child in ipairs(self.children) do
-		if type(child._x) == 'function' then
-			local oldX = child._x
-			child._x = function() return oldX() - (left - self.left) end
-		else
-			child.x = child.x - (left - self.left)
-		end
-		if type(child._y) == 'function' then
-			local oldY = child._y
-			child._y = function() return oldY() - (top - self.top) end
-		else
-			child.y = child.y - (top - self.top)
-		end
-	end
-	-- resize the box
+function Box:setBounds(left, top, right, bottom)
 	self.left = left
 	self.top = top
 	self.width = right - left
 	self.height = bottom - top
+end
+
+function Box:setRectangle(x, y, width, height)
+	self.x = x
+	self.y = y
+	self.width = width
+	self.height = height
+end
+
+function Box:shiftChildren(dx, dy)
+	for _, child in ipairs(self.children) do
+		if type(child._x) == 'function' then
+			local oldX = child._x
+			child.x = function() return oldX() + dx end
+		else
+			child.x = child.x + dx
+		end
+		if type(child._y) == 'function' then
+			local oldY = child._y
+			child.y = function() return oldY() + dy end
+		else
+			child.y = child.y + dy
+		end
+	end
+end
+
+function Box:normalizeChildren()
+	self:shiftChildren(-self:getChildrenLocalLeft(), -self:getChildrenLocalTop())
+end
+
+function Box:wrap(mode, padding)
+	mode = mode or 'moveBox'
+	padding = padding or 0
+	if not (mode == 'moveBox' or mode == 'moveChildren') then
+		error('mode must be "moveBox" or "moveChildren"')
+	end
+	if mode == 'moveBox' then
+		self:setBounds(self:getChildrenBounds())
+		self.left = self.left - padding
+		self.top = self.top - padding
+	elseif mode == 'moveChildren' then
+		self.width, self.height = self:getChildrenWidth(), self:getChildrenHeight()
+	end
+	self:normalizeChildren()
+	self.width = self.width + padding * 2
+	self.height = self.height + padding * 2
+	self:shiftChildren(padding, padding)
 end
 
 --[[
@@ -456,23 +548,6 @@ function Box:draw(stencilValue)
 end
 
 boxer.Box = Box
-
---[[
-	creates a box around a number of children and adjusts the children's
-	position to be relative to the box.
-]]
-function boxer.wrap(options)
-	if not options then
-		error('Must provide an options table to boxer.wrap()', 2)
-	end
-	if not (options.children and #options.children > 0) then
-		error('Must provide at least one child to wrap', 2)
-	end
-	local box = boxer.Box()
-	box.children = options.children
-	box:wrap(options.padding)
-	return box
-end
 
 local Text = Box.extend()
 
