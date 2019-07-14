@@ -317,6 +317,7 @@ end
 function Box:setX(x, anchorX)
 	anchorX = anchorX or 0
 	self._x, self._anchorX = x, anchorX
+	return self
 end
 
 --[[
@@ -327,6 +328,7 @@ end
 function Box:setY(y, anchorY)
 	anchorY = anchorY or 0
 	self._y, self._anchorY = y, anchorY
+	return self
 end
 
 function Box:setBounds(left, top, right, bottom)
@@ -334,6 +336,7 @@ function Box:setBounds(left, top, right, bottom)
 	self.top = top
 	self.width = right - left
 	self.height = bottom - top
+	return self
 end
 
 function Box:setRectangle(x, y, width, height)
@@ -341,6 +344,7 @@ function Box:setRectangle(x, y, width, height)
 	self.y = y
 	self.width = width
 	self.height = height
+	return self
 end
 
 function Box:shiftChildren(dx, dy)
@@ -358,10 +362,12 @@ function Box:shiftChildren(dx, dy)
 			child.y = child.y + dy
 		end
 	end
+	return self
 end
 
 function Box:normalizeChildren()
 	self:shiftChildren(-self:getChildrenLocalLeft(), -self:getChildrenLocalTop())
+	return self
 end
 
 function Box:wrap(mode, padding)
@@ -381,6 +387,7 @@ function Box:wrap(mode, padding)
 	self.width = self.width + padding * 2
 	self.height = self.height + padding * 2
 	self:shiftChildren(padding, padding)
+	return self
 end
 
 --[[
